@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>大宗农产品进口报告数据库</title>
+    <link rel="stylesheet" href="assets/styles.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark">DB</span>
+        <div>
+          <p>大宗农产品</p>
+          <h1>进口报告数据库</h1>
+        </div>
+      </div>
+      <div class="session-bar">
+        <span id="roleBadge" class="badge muted">未登录</span>
+        <span id="userEmail" class="session-email"></span>
+        <button id="signOutBtn" class="ghost-button hidden" type="button">退出</button>
+      </div>
+    </header>
+
+    <main class="app">
+      <section id="setupPanel" class="notice hidden">
+        <h2>需要 Supabase 配置</h2>
+        <p>请在 GitHub Secrets 中设置 <code>SUPABASE_URL</code> 和 <code>SUPABASE_ANON_KEY</code>，或复制 <code>config.example.js</code> 为 <code>config.js</code> 后填写项目参数。</p>
+      </section>
+
+      <section id="authPanel" class="auth-shell hidden">
+        <div class="auth-copy">
+          <p class="eyebrow">Supabase Auth</p>
+          <h2>登录后查询和维护备案数据</h2>
+          <p>账号由 Supabase 管理，数据权限由数据库 RLS 控制。</p>
+        </div>
+        <form id="authForm" class="auth-form">
+          <label>
+            <span>邮箱</span>
+            <input name="email" type="email" autocomplete="email" required>
+          </label>
+          <label>
+            <span>密码</span>
+            <input name="password" type="password" autocomplete="current-password" required>
+          </label>
+          <div class="button-row">
+            <button class="primary-button" type="submit" data-auth-mode="signin">登录</button>
+            <button class="secondary-button" type="button" data-auth-mode="signup">注册</button>
+          </div>
+          <p id="authMessage" class="form-message"></p>
+        </form>
+      </section>
+
+      <section id="appShell" class="workspace hidden">
+        <nav class="tabs" aria-label="页面切换">
+          <button class="tab active" type="button" data-view="queryView">台账查询</button>
+          <button class="tab" type="button" data-view="editView">记录维护</button>
+          <button class="tab" type="button" data-view="adminView">权限</button>
+        </nav>
+
+        <section id="queryView" class="view active">
+          <section class="metrics">
+            <div class="metric">
+              <span>记录数</span>
+              <strong id="metricCount">0</strong>
+            </div>
+            <div class="metric">
+              <span>备案产能</span>
+              <strong><em id="metricCapacity">0</em> 万吨</strong>
+            </div>
+            <div class="metric highlight">
+              <span>中粮产能</span>
+              <strong><em id="metricOfco">0</em> 万吨</strong>
+            </div>
+            <div class="metric">
+              <span>当前占比</span>
+              <strong><em id="metricShare">0</em>%</strong>
+            </div>
+          </section>
+
+          <section class="filter-bar">
+            <label class="field search-field">
+              <span>关键词</span>
+              <input id="searchInput" type="search" placeholder="企业、地区、状态">
+            </label>
+            <label class="field">
+              <span>地区</span>
+              <select id="provinceFilter">
+                <option value="">全部</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>体系</span>
+              <select id="groupFilter">
+                <option value="">全部</option>
+                <option value="中粮">中粮</option>
+                <option value="其他">其他</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>产能下限</span>
+              <input id="capacityFilter" type="number" min="0" step="1" placeholder="万吨">
+            </label>
+            <button id="exportBtn" class="icon-button" type="button" title="导出查询结果">导出 CSV</button>
+          </section>
+
+          <section class="data-grid">
+            <div class="table-panel">
+              <table>
+                <thead>
+                  <tr>
+                    <th>编号</th>
+                    <th>企业名称</th>
+                    <th>地区</th>
+                    <th>体系</th>
+                    <th class="num">备案产能</th>
+                    <th>状态</th>
+                  </tr>
+                </thead>
+                <tbody id="recordsBody"></tbody>
+              </table>
+            </div>
+            <aside class="detail-panel">
+              <div id="emptyDetail" class="empty-state">
+                <strong>选择记录</strong>
+                <span>查看备案详情和维护入口。</span>
+              </div>
+              <div id="recordDetail" class="detail-content hidden"></div>
+            </aside>
+          </section>
+        </section>
+
+        <section id="editView" class="view">
+          <form id="enterpriseForm" class="record-form">
+            <input name="id" type="hidden">
+            <label class="field">
+              <span>编号</span>
+              <input name="code" placeholder="R032">
+            </label>
+            <label class="field">
+              <span>企业名称</span>
+              <input name="enterprise_name" required>
+            </label>
+            <label class="field">
+              <span>备案产能</span>
+              <input name="capacity_10k_tons" type="number" min="0" step="0.01" required>
+            </label>
+            <label class="field">
+              <span>省份</span>
+              <input name="province">
+            </label>
+            <label class="field">
+              <span>城市</span>
+              <input name="city">
+            </label>
+            <label class="field">
+              <span>体系</span>
+              <select name="group_name">
+                <option value="其他">其他</option>
+                <option value="中粮">中粮</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>状态</span>
+              <select name="status">
+                <option value="已备案">已备案</option>
+                <option value="待核验">待核验</option>
+                <option value="停用">停用</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>来源</span>
+              <input name="source_document">
+            </label>
+            <label class="field wide">
+              <span>备注</span>
+              <textarea name="notes" rows="4"></textarea>
+            </label>
+            <div class="form-actions">
+              <button id="saveRecordBtn" class="primary-button" type="submit">保存记录</button>
+              <button id="resetFormBtn" class="secondary-button" type="button">新建</button>
+              <button id="deleteRecordBtn" class="danger-button hidden" type="button">删除</button>
+            </div>
+            <p id="recordMessage" class="form-message"></p>
+          </form>
+        </section>
+
+        <section id="adminView" class="view">
+          <div class="admin-grid">
+            <div class="panel">
+              <h2>当前账号</h2>
+              <dl class="info-list">
+                <div>
+                  <dt>邮箱</dt>
+                  <dd id="profileEmail">-</dd>
+                </div>
+                <div>
+                  <dt>角色</dt>
+                  <dd id="profileRole">viewer</dd>
+                </div>
+              </dl>
+            </div>
+            <div class="panel">
+              <h2>角色规则</h2>
+              <dl class="info-list">
+                <div>
+                  <dt>viewer</dt>
+                  <dd>查询和导出</dd>
+                </div>
+                <div>
+                  <dt>editor</dt>
+                  <dd>新增和修改</dd>
+                </div>
+                <div>
+                  <dt>admin</dt>
+                  <dd>新增、修改、删除和授权</dd>
+                </div>
+              </dl>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="config.js"></script>
+    <script type="module" src="assets/app.js"></script>
+  </body>
+</html>
