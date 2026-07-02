@@ -26,13 +26,22 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Create runtime config
+        env:
+          SUPABASE_URL_RAW: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY_RAW: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
+          SUPABASE_URL="${SUPABASE_URL_RAW#*=}"
+          SUPABASE_ANON_KEY="${SUPABASE_ANON_KEY_RAW#*=}"
+          SUPABASE_URL="$(printf '%s' "$SUPABASE_URL" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+          SUPABASE_ANON_KEY="$(printf '%s' "$SUPABASE_ANON_KEY" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
           cat > config.js <<'EOF'
           window.SUPABASE_CONFIG = {
-            url: "${{ secrets.SUPABASE_URL }}",
-            anonKey: "${{ secrets.SUPABASE_ANON_KEY }}"
+            url: "__SUPABASE_URL__",
+            anonKey: "__SUPABASE_ANON_KEY__"
           };
           EOF
+          sed -i "s#__SUPABASE_URL__#$SUPABASE_URL#g" config.js
+          sed -i "s#__SUPABASE_ANON_KEY__#$SUPABASE_ANON_KEY#g" config.js
 
       - name: Prepare site artifact
         run: |
