@@ -53,47 +53,36 @@
 
       <section id="appShell" class="workspace hidden">
         <section class="module-board" aria-label="数据库大模块">
-          <div class="module-board-header">
-            <div>
-              <p class="eyebrow">DATABASE MODULES</p>
-              <h2>业务模块工作台</h2>
-            </div>
-            <span class="module-total">1 个已接入 · 4 个预留</span>
-          </div>
           <div class="module-grid">
-            <button id="primaryModuleCard" class="module-card active" type="button" aria-current="true">
-              <span class="module-status live">已上线</span>
+            <button id="primaryModuleCard" class="module-card active" type="button" data-module="capacity" aria-current="true">
+              <span class="module-icon">产</span>
               <span class="module-title">备案产能和自动进口证发放比例</span>
-              <span class="module-desc">备案企业、产能、自动证额度和年度发放比例</span>
               <span id="moduleRecordCount" class="module-stat">载入中</span>
             </button>
-            <article class="module-card placeholder">
-              <span class="module-status">预留模块</span>
+            <button class="module-card" type="button" data-module="contracts">
+              <span class="module-icon">合</span>
               <span class="module-title">进口合同与报告台账</span>
-              <span class="module-desc">合同、报告、申报状态</span>
-              <span class="module-stat">待接入</span>
-            </article>
-            <article class="module-card placeholder">
-              <span class="module-status">预留模块</span>
+              <span class="module-stat">预留</span>
+            </button>
+            <button class="module-card" type="button" data-module="licenseBalance">
+              <span class="module-icon">证</span>
               <span class="module-title">自动证扣减与余量</span>
-              <span class="module-desc">许可证使用、扣减、剩余额度</span>
-              <span class="module-stat">待接入</span>
-            </article>
-            <article class="module-card placeholder">
-              <span class="module-status">预留模块</span>
+              <span class="module-stat">预留</span>
+            </button>
+            <button class="module-card" type="button" data-module="vessels">
+              <span class="module-icon">船</span>
               <span class="module-title">船期到港与执行进度</span>
-              <span class="module-desc">发运、到港、执行跟踪</span>
-              <span class="module-stat">待接入</span>
-            </article>
-            <article class="module-card placeholder">
-              <span class="module-status">预留模块</span>
+              <span class="module-stat">预留</span>
+            </button>
+            <button class="module-card" type="button" data-module="documents">
+              <span class="module-icon">档</span>
               <span class="module-title">附件资料库</span>
-              <span class="module-desc">制度文件、Excel、证明材料</span>
-              <span class="module-stat">待接入</span>
-            </article>
+              <span class="module-stat">预留</span>
+            </button>
           </div>
         </section>
 
+        <section id="capacityModule" class="module-workspace active">
         <nav class="tabs" aria-label="页面切换">
           <button class="tab active" type="button" data-view="queryView">查阅模式</button>
           <button class="tab" type="button" data-view="editView">编辑模式</button>
@@ -317,6 +306,73 @@
               </dl>
             </div>
           </div>
+        </section>
+        </section>
+
+        <section id="reservedModule" class="module-workspace hidden" aria-label="预留模块界面">
+          <nav class="tabs reserved-tabs" aria-label="预留模块页面切换">
+            <button class="tab active" type="button">查阅模式</button>
+            <button class="tab" type="button">编辑模式</button>
+            <button class="tab" type="button">操作历史</button>
+            <button class="tab" type="button">模块设置</button>
+          </nav>
+
+          <section class="reserved-view">
+            <section class="metrics reserved-metrics">
+              <div class="metric">
+                <span>记录数</span>
+                <strong>0</strong>
+              </div>
+              <div class="metric">
+                <span>当前状态</span>
+                <strong>预留</strong>
+              </div>
+              <div class="metric highlight">
+                <span>主指标</span>
+                <strong>-</strong>
+              </div>
+              <div class="metric">
+                <span>更新时间</span>
+                <strong>-</strong>
+              </div>
+            </section>
+
+            <section class="filter-bar reserved-filter">
+              <label class="field search-field">
+                <span>关键词</span>
+                <input id="reservedSearch" type="search" disabled>
+              </label>
+              <label class="field">
+                <span>状态</span>
+                <select disabled>
+                  <option>全部</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>期间</span>
+                <input type="month" disabled>
+              </label>
+              <button class="icon-button" type="button" disabled>导出 CSV</button>
+            </section>
+
+            <section class="data-grid reserved-grid">
+              <div class="table-panel reserved-table">
+                <table>
+                  <thead>
+                    <tr id="reservedTableHead"></tr>
+                  </thead>
+                  <tbody id="reservedTableBody"></tbody>
+                </table>
+              </div>
+              <aside class="detail-panel reserved-detail">
+                <div class="reserved-detail-head">
+                  <h2 id="reservedModuleName">预留模块</h2>
+                  <span class="badge muted">待建表</span>
+                </div>
+                <dl id="reservedFieldList" class="info-list"></dl>
+              </aside>
+            </section>
+          </section>
         </section>
       </section>
     </main>

@@ -1,5 +1,31 @@
 const MODULE_SLUG = "capacity_license_ratio";
 
+const MODULES = {
+  capacity: {
+    title: "备案产能和自动进口证发放比例",
+  },
+  contracts: {
+    title: "进口合同与报告台账",
+    columns: ["合同编号", "企业名称", "品种", "合同数量", "报告状态", "报告日期"],
+    fields: ["合同编号", "企业名称", "品种", "合同数量", "报告状态", "附件"],
+  },
+  licenseBalance: {
+    title: "自动证扣减与余量",
+    columns: ["许可证号", "企业名称", "核发额度", "已扣减", "剩余额度", "状态"],
+    fields: ["许可证号", "企业名称", "核发额度", "已扣减", "剩余额度", "扣减日期"],
+  },
+  vessels: {
+    title: "船期到港与执行进度",
+    columns: ["船名", "企业名称", "装港", "目的港", "预计到港", "执行状态"],
+    fields: ["船名", "企业名称", "装港", "目的港", "预计到港", "执行状态"],
+  },
+  documents: {
+    title: "附件资料库",
+    columns: ["文件名称", "所属模块", "文件类型", "上传人", "上传日期", "状态"],
+    fields: ["文件名称", "所属模块", "文件类型", "上传人", "上传日期", "备注"],
+  },
+};
+
 const state = {
   supabase: null,
   session: null,
@@ -8,6 +34,7 @@ const state = {
   records: [],
   history: [],
   selectedId: null,
+  activeModule: "capacity",
 };
 
 const refs = {
@@ -21,7 +48,13 @@ const refs = {
   signOutBtn: document.querySelector("#signOutBtn"),
   moduleTitle: document.querySelector("#moduleTitle"),
   moduleName: document.querySelector("#moduleName"),
-  primaryModuleCard: document.querySelector("#primaryModuleCard"),
+  moduleCards: document.querySelectorAll(".module-card"),
+  capacityModule: document.querySelector("#capacityModule"),
+  reservedModule: document.querySelector("#reservedModule"),
+  reservedModuleName: document.querySelector("#reservedModuleName"),
+  reservedTableHead: document.querySelector("#reservedTableHead"),
+  reservedTableBody: document.querySelector("#reservedTableBody"),
+  reservedFieldList: document.querySelector("#reservedFieldList"),
   moduleRecordCount: document.querySelector("#moduleRecordCount"),
   searchInput: document.querySelector("#searchInput"),
   regionFilter: document.querySelector("#regionFilter"),
@@ -81,11 +114,13 @@ function isConfigured(config) {
 }
 
 function wireUi() {
-  document.querySelectorAll(".tab").forEach((tab) => {
+  document.querySelectorAll(".tab[data-view]").forEach((tab) => {
     tab.addEventListener("click", () => activateView(tab.dataset.view));
   });
 
-  refs.primaryModuleCard.addEventListener("click", () => activateView("queryView"));
+  refs.moduleCards.forEach((card) => {
+    card.addEventListener("click", () => selectModule(card.dataset.module));
+  });
   refs.authForm.addEventListener("submit", (event) => handleAuth(event, "signin"));
   refs.authForm.querySelector("[data-auth-mode='signup']").addEventListener("click", (event) => handleAuth(event, "signup"));
   refs.signOutBtn.addEventListener("click", signOut);
@@ -105,8 +140,34 @@ function wireUi() {
   refs.refreshHistoryBtn.addEventListener("click", loadHistory);
 }
 
+function selectModule(moduleKey) {
+  const key = MODULES[moduleKey] ? moduleKey : "capacity";
+  state.activeModule = key;
+
+  refs.moduleCards.forEach((card) => {
+    const active = card.dataset.module === key;
+    card.classList.toggle("active", active);
+    card.setAttribute("aria-current", active ? "true" : "false");
+  });
+
+  if (key === "capacity") {
+    refs.capacityModule.classList.add("active");
+    refs.capacityModule.classList.remove("hidden");
+    refs.reservedModule.classList.remove("active");
+    refs.reservedModule.classList.add("hidden");
+    refs.moduleTitle.textContent = state.module?.name || MODULES.capacity.title;
+    return;
+  }
+
+  refs.capacityModule.classList.remove("active");
+  refs.capacityModule.classList.add("hidden");
+  refs.reservedModule.classList.add("active");
+  refs.reservedModule.classList.remove("hidden");
+  renderReservedModule(key);
+}
+
 async function activateView(viewId) {
-  document.querySelectorAll(".tab").forEach((item) => {
+  document.querySelectorAll(".tab[data-view]").forEach((item) => {
     item.classList.toggle("active", item.dataset.view === viewId);
   });
   document.querySelectorAll(".view").forEach((view) => {
@@ -115,6 +176,19 @@ async function activateView(viewId) {
   if (viewId === "historyView") {
     await loadHistory();
   }
+}
+
+function renderReservedModule(moduleKey) {
+  const moduleConfig = MODULES[moduleKey];
+  refs.moduleTitle.textContent = moduleConfig.title;
+  refs.reservedModuleName.textContent = moduleConfig.title;
+  refs.reservedTableHead.innerHTML = moduleConfig.columns
+    .map((column) => `<th>${escapeHtml(column)}</th>`)
+    .join("");
+  refs.reservedTableBody.innerHTML = `<tr><td colspan="${moduleConfig.columns.length}">暂无记录</td></tr>`;
+  refs.reservedFieldList.innerHTML = moduleConfig.fields
+    .map((field) => `<div><dt>${escapeHtml(field)}</dt><dd>预留</dd></div>`)
+    .join("");
 }
 
 async function applySession(session) {
@@ -213,7 +287,9 @@ async function loadModule() {
 
   state.module = data;
   const name = data?.name || "备案产能和自动进口证发放比例";
-  refs.moduleTitle.textContent = name;
+  if (state.activeModule === "capacity") {
+    refs.moduleTitle.textContent = name;
+  }
   refs.moduleName.textContent = name;
 }
 
