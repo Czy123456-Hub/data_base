@@ -19,7 +19,8 @@
 也可以在 Supabase SQL Editor 里按顺序执行：
 
 1. `supabase/migrations/20260702000000_init.sql`
-2. `supabase/migrations/20260702001000_seed_enterprises.sql`
+2. `supabase/migrations/20260706000000_license_ratio_module.sql`
+3. `supabase/migrations/20260706001000_seed_license_allocations.sql`
 
 第一个用户注册后默认是 `viewer`，需要在 Supabase SQL Editor 里提升为管理员：
 
@@ -90,4 +91,4 @@ python3 -m http.server 8000
 1. `supabase/migrations/20260706000000_license_ratio_module.sql`
 2. `supabase/migrations/20260706001000_seed_license_allocations.sql`
 
-第一个文件会调整库表、权限和撤回函数；第二个文件会导入 `2026年自动进口许可证发放情况0519.xlsx` 的 31 行数据。
+第一个文件会调整库表、权限和撤回函数；第二个文件是合并后的权威 seed，会导入省市、统计地区、备案产能、2025/2026 自动证额度等 31 行数据。
