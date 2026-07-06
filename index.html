@@ -11,8 +11,8 @@
       <div class="brand">
         <span class="brand-mark">DB</span>
         <div>
-          <p>大宗农产品</p>
-          <h1>进口报告数据库</h1>
+          <p>大宗农产品数据库</p>
+          <h1 id="moduleTitle">备案产能和自动进口证发放比例</h1>
         </div>
       </div>
       <div class="session-bar">
@@ -53,9 +53,10 @@
 
       <section id="appShell" class="workspace hidden">
         <nav class="tabs" aria-label="页面切换">
-          <button class="tab active" type="button" data-view="queryView">台账查询</button>
-          <button class="tab" type="button" data-view="editView">记录维护</button>
-          <button class="tab" type="button" data-view="adminView">权限</button>
+          <button class="tab active" type="button" data-view="queryView">查阅模式</button>
+          <button class="tab" type="button" data-view="editView">编辑模式</button>
+          <button class="tab" type="button" data-view="historyView">操作历史</button>
+          <button class="tab" type="button" data-view="adminView">模块设置</button>
         </nav>
 
         <section id="queryView" class="view active">
@@ -69,12 +70,20 @@
               <strong><em id="metricCapacity">0</em> 万吨</strong>
             </div>
             <div class="metric highlight">
-              <span>中粮产能</span>
-              <strong><em id="metricOfco">0</em> 万吨</strong>
+              <span>2025 自动证</span>
+              <strong><em id="metricLicense2025">0</em> 吨</strong>
             </div>
             <div class="metric">
-              <span>当前占比</span>
-              <strong><em id="metricShare">0</em>%</strong>
+              <span>2025 发放比例</span>
+              <strong><em id="metricRatio2025">0</em>%</strong>
+            </div>
+            <div class="metric highlight">
+              <span>2026 自动证</span>
+              <strong><em id="metricLicense2026">0</em> 吨</strong>
+            </div>
+            <div class="metric">
+              <span>2026 发放比例</span>
+              <strong><em id="metricRatio2026">0</em>%</strong>
             </div>
           </section>
 
@@ -85,7 +94,7 @@
             </label>
             <label class="field">
               <span>地区</span>
-              <select id="provinceFilter">
+              <select id="regionFilter">
                 <option value="">全部</option>
               </select>
             </label>
@@ -112,8 +121,11 @@
                     <th>编号</th>
                     <th>企业名称</th>
                     <th>地区</th>
-                    <th>体系</th>
                     <th class="num">备案产能</th>
+                    <th class="num">2025 自动证</th>
+                    <th class="num">2025 比例</th>
+                    <th class="num">2026 自动证</th>
+                    <th class="num">2026 比例</th>
                     <th>状态</th>
                   </tr>
                 </thead>
@@ -146,6 +158,10 @@
               <input name="capacity_10k_tons" type="number" min="0" step="0.01" required>
             </label>
             <label class="field">
+              <span>统计地区</span>
+              <input name="region_label" placeholder="东北 / 山东 / 广西">
+            </label>
+            <label class="field">
               <span>省份</span>
               <input name="province">
             </label>
@@ -159,6 +175,22 @@
                 <option value="其他">其他</option>
                 <option value="中粮">中粮</option>
               </select>
+            </label>
+            <label class="field">
+              <span>2025 自动证</span>
+              <input name="license_2025_tons" type="number" min="0" step="1" placeholder="吨">
+            </label>
+            <label class="field">
+              <span>2025 发放比例</span>
+              <input name="license_2025_ratio" disabled>
+            </label>
+            <label class="field">
+              <span>2026 自动证</span>
+              <input name="license_2026_tons" type="number" min="0" step="1" placeholder="吨">
+            </label>
+            <label class="field">
+              <span>2026 发放比例</span>
+              <input name="license_2026_ratio" disabled>
             </label>
             <label class="field">
               <span>状态</span>
@@ -185,8 +217,46 @@
           </form>
         </section>
 
+        <section id="historyView" class="view">
+          <div class="panel history-panel">
+            <div class="section-heading">
+              <h2>最近操作</h2>
+              <button id="refreshHistoryBtn" class="secondary-button" type="button">刷新</button>
+            </div>
+            <div class="table-panel compact">
+              <table>
+                <thead>
+                  <tr>
+                    <th>时间</th>
+                    <th>动作</th>
+                    <th>企业</th>
+                    <th>字段摘要</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="historyBody"></tbody>
+              </table>
+            </div>
+            <p id="historyMessage" class="form-message"></p>
+          </div>
+        </section>
+
         <section id="adminView" class="view">
           <div class="admin-grid">
+            <div class="panel">
+              <h2>当前模块</h2>
+              <dl class="info-list">
+                <div>
+                  <dt>名称</dt>
+                  <dd id="moduleName">备案产能和自动进口证发放比例</dd>
+                </div>
+                <div>
+                  <dt>模式</dt>
+                  <dd>登录用户可查阅和编辑</dd>
+                </div>
+              </dl>
+            </div>
             <div class="panel">
               <h2>当前账号</h2>
               <dl class="info-list">
@@ -195,25 +265,12 @@
                   <dd id="profileEmail">-</dd>
                 </div>
                 <div>
-                  <dt>角色</dt>
-                  <dd id="profileRole">viewer</dd>
-                </div>
-              </dl>
-            </div>
-            <div class="panel">
-              <h2>角色规则</h2>
-              <dl class="info-list">
-                <div>
-                  <dt>viewer</dt>
-                  <dd>查询和导出</dd>
+                  <dt>权限</dt>
+                  <dd id="profileRole">可编辑</dd>
                 </div>
                 <div>
-                  <dt>editor</dt>
-                  <dd>新增和修改</dd>
-                </div>
-                <div>
-                  <dt>admin</dt>
-                  <dd>新增、修改、删除和授权</dd>
+                  <dt>撤回</dt>
+                  <dd>通过操作历史恢复上一版本</dd>
                 </div>
               </dl>
             </div>

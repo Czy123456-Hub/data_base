@@ -275,7 +275,7 @@ textarea {
 
 .tabs {
   display: inline-grid;
-  grid-template-columns: repeat(3, minmax(100px, 1fr));
+  grid-template-columns: repeat(4, minmax(100px, 1fr));
   gap: 4px;
   min-height: 42px;
   padding: 4px;
@@ -309,7 +309,7 @@ textarea {
 
 .metrics {
   display: grid;
-  grid-template-columns: repeat(4, minmax(150px, 1fr));
+  grid-template-columns: repeat(6, minmax(140px, 1fr));
   gap: 12px;
 }
 
@@ -363,7 +363,7 @@ textarea {
 
 table {
   width: 100%;
-  min-width: 780px;
+  min-width: 1080px;
   border-collapse: collapse;
 }
 
@@ -481,6 +481,28 @@ tbody tr.selected {
 
 .panel {
   padding: 16px;
+}
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.history-panel {
+  overflow: hidden;
+}
+
+.table-panel.compact {
+  min-height: 360px;
+  box-shadow: none;
+}
+
+.compact-button {
+  min-height: 30px;
+  padding: 0 10px;
 }
 
 .info-list {
