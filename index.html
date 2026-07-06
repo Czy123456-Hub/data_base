@@ -59,10 +59,10 @@
               <span class="module-title">备案产能和自动进口证发放比例</span>
               <span id="moduleRecordCount" class="module-stat">载入中</span>
             </button>
-            <button class="module-card" type="button" data-module="contracts">
-              <span class="module-icon">合</span>
-              <span class="module-title">进口合同与报告台账</span>
-              <span class="module-stat">预留</span>
+            <button class="module-card" type="button" data-module="ports">
+              <span class="module-icon">港</span>
+              <span class="module-title">港口与船代信息</span>
+              <span id="portModuleCount" class="module-stat">待运行 SQL</span>
             </button>
             <button class="module-card" type="button" data-module="licenseBalance">
               <span class="module-icon">证</span>
@@ -307,6 +307,72 @@
             </div>
           </div>
         </section>
+        </section>
+
+        <section id="portsModule" class="module-workspace hidden" aria-label="港口与船代信息">
+          <nav class="tabs" aria-label="港口模块页面切换">
+            <button class="tab active" type="button" data-port-view="berths">港口吃水</button>
+            <button class="tab" type="button" data-port-view="agents">船代信息</button>
+          </nav>
+
+          <section class="metrics port-metrics">
+            <div class="metric">
+              <span>港口数</span>
+              <strong id="portMetricPorts">0</strong>
+            </div>
+            <div class="metric">
+              <span>记录数</span>
+              <strong id="portMetricRows">0</strong>
+            </div>
+            <div class="metric highlight">
+              <span>最大吃水</span>
+              <strong><em id="portMetricDraft">0</em> 米</strong>
+            </div>
+            <div class="metric">
+              <span>最大载重吨</span>
+              <strong><em id="portMetricDwt">0</em> 吨</strong>
+            </div>
+          </section>
+
+          <section class="filter-bar port-filter">
+            <label class="field search-field">
+              <span>关键词</span>
+              <input id="portSearchInput" type="search" placeholder="港口、码头、泊位、船代">
+            </label>
+            <label class="field">
+              <span>港口</span>
+              <select id="portNameFilter">
+                <option value="">全部</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>吃水下限</span>
+              <input id="portDraftFilter" type="number" min="0" step="0.1" placeholder="米">
+            </label>
+            <label class="field">
+              <span>载重吨下限</span>
+              <input id="portDwtFilter" type="number" min="0" step="1000" placeholder="吨">
+            </label>
+            <button id="portExportBtn" class="icon-button" type="button" title="导出港口查询结果">导出 CSV</button>
+          </section>
+
+          <section class="data-grid port-grid">
+            <div class="table-panel">
+              <table>
+                <thead>
+                  <tr id="portsTableHead"></tr>
+                </thead>
+                <tbody id="portsTableBody"></tbody>
+              </table>
+            </div>
+            <aside class="detail-panel">
+              <div id="emptyPortDetail" class="empty-state">
+                <strong>选择港口记录</strong>
+                <span>查看码头参数或船代通讯录。</span>
+              </div>
+              <div id="portRecordDetail" class="detail-content hidden"></div>
+            </aside>
+          </section>
         </section>
 
         <section id="reservedModule" class="module-workspace hidden" aria-label="预留模块界面">

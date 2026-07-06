@@ -4,10 +4,8 @@ const MODULES = {
   capacity: {
     title: "备案产能和自动进口证发放比例",
   },
-  contracts: {
-    title: "进口合同与报告台账",
-    columns: ["合同编号", "企业名称", "品种", "合同数量", "报告状态", "报告日期"],
-    fields: ["合同编号", "企业名称", "品种", "合同数量", "报告状态", "附件"],
+  ports: {
+    title: "港口与船代信息",
   },
   licenseBalance: {
     title: "自动证扣减与余量",
@@ -35,6 +33,11 @@ const state = {
   history: [],
   selectedId: null,
   activeModule: "capacity",
+  activePortView: "berths",
+  portBerths: [],
+  shippingAgents: [],
+  portsLoaded: false,
+  selectedPortId: null,
 };
 
 const refs = {
@@ -50,12 +53,14 @@ const refs = {
   moduleName: document.querySelector("#moduleName"),
   moduleCards: document.querySelectorAll(".module-card"),
   capacityModule: document.querySelector("#capacityModule"),
+  portsModule: document.querySelector("#portsModule"),
   reservedModule: document.querySelector("#reservedModule"),
   reservedModuleName: document.querySelector("#reservedModuleName"),
   reservedTableHead: document.querySelector("#reservedTableHead"),
   reservedTableBody: document.querySelector("#reservedTableBody"),
   reservedFieldList: document.querySelector("#reservedFieldList"),
   moduleRecordCount: document.querySelector("#moduleRecordCount"),
+  portModuleCount: document.querySelector("#portModuleCount"),
   searchInput: document.querySelector("#searchInput"),
   regionFilter: document.querySelector("#regionFilter"),
   groupFilter: document.querySelector("#groupFilter"),
@@ -78,6 +83,19 @@ const refs = {
   metricRatio2025: document.querySelector("#metricRatio2025"),
   metricLicense2026: document.querySelector("#metricLicense2026"),
   metricRatio2026: document.querySelector("#metricRatio2026"),
+  portSearchInput: document.querySelector("#portSearchInput"),
+  portNameFilter: document.querySelector("#portNameFilter"),
+  portDraftFilter: document.querySelector("#portDraftFilter"),
+  portDwtFilter: document.querySelector("#portDwtFilter"),
+  portExportBtn: document.querySelector("#portExportBtn"),
+  portMetricPorts: document.querySelector("#portMetricPorts"),
+  portMetricRows: document.querySelector("#portMetricRows"),
+  portMetricDraft: document.querySelector("#portMetricDraft"),
+  portMetricDwt: document.querySelector("#portMetricDwt"),
+  portsTableHead: document.querySelector("#portsTableHead"),
+  portsTableBody: document.querySelector("#portsTableBody"),
+  emptyPortDetail: document.querySelector("#emptyPortDetail"),
+  portRecordDetail: document.querySelector("#portRecordDetail"),
   profileEmail: document.querySelector("#profileEmail"),
   profileRole: document.querySelector("#profileRole"),
 };
@@ -121,6 +139,16 @@ function wireUi() {
   refs.moduleCards.forEach((card) => {
     card.addEventListener("click", () => selectModule(card.dataset.module));
   });
+  document.querySelectorAll("[data-port-view]").forEach((tab) => {
+    tab.addEventListener("click", () => {
+      state.activePortView = tab.dataset.portView;
+      state.selectedPortId = null;
+      document.querySelectorAll("[data-port-view]").forEach((item) => {
+        item.classList.toggle("active", item.dataset.portView === state.activePortView);
+      });
+      renderPortsModule();
+    });
+  });
   refs.authForm.addEventListener("submit", (event) => handleAuth(event, "signin"));
   refs.authForm.querySelector("[data-auth-mode='signup']").addEventListener("click", (event) => handleAuth(event, "signup"));
   refs.signOutBtn.addEventListener("click", signOut);
@@ -128,19 +156,23 @@ function wireUi() {
   [refs.searchInput, refs.regionFilter, refs.groupFilter, refs.capacityFilter].forEach((input) => {
     input.addEventListener("input", renderRecords);
   });
+  [refs.portSearchInput, refs.portNameFilter, refs.portDraftFilter, refs.portDwtFilter].forEach((input) => {
+    input.addEventListener("input", renderPortsModule);
+  });
 
   ["capacity_10k_tons", "license_2025_tons", "license_2026_tons"].forEach((name) => {
     refs.enterpriseForm.elements[name].addEventListener("input", renderFormRatios);
   });
 
   refs.exportBtn.addEventListener("click", () => exportCsv(getFilteredRecords()));
+  refs.portExportBtn.addEventListener("click", () => exportPortCsv(getFilteredPortRows()));
   refs.enterpriseForm.addEventListener("submit", saveRecord);
   refs.resetFormBtn.addEventListener("click", () => setFormRecord(null));
   refs.deleteRecordBtn.addEventListener("click", deleteRecord);
   refs.refreshHistoryBtn.addEventListener("click", loadHistory);
 }
 
-function selectModule(moduleKey) {
+async function selectModule(moduleKey) {
   const key = MODULES[moduleKey] ? moduleKey : "capacity";
   state.activeModule = key;
 
@@ -153,14 +185,33 @@ function selectModule(moduleKey) {
   if (key === "capacity") {
     refs.capacityModule.classList.add("active");
     refs.capacityModule.classList.remove("hidden");
+    refs.portsModule.classList.remove("active");
+    refs.portsModule.classList.add("hidden");
     refs.reservedModule.classList.remove("active");
     refs.reservedModule.classList.add("hidden");
     refs.moduleTitle.textContent = state.module?.name || MODULES.capacity.title;
     return;
   }
 
+  if (key === "ports") {
+    refs.capacityModule.classList.remove("active");
+    refs.capacityModule.classList.add("hidden");
+    refs.reservedModule.classList.remove("active");
+    refs.reservedModule.classList.add("hidden");
+    refs.portsModule.classList.add("active");
+    refs.portsModule.classList.remove("hidden");
+    refs.moduleTitle.textContent = MODULES.ports.title;
+    if (!state.portsLoaded && state.session) {
+      await loadPortData();
+    }
+    renderPortsModule();
+    return;
+  }
+
   refs.capacityModule.classList.remove("active");
   refs.capacityModule.classList.add("hidden");
+  refs.portsModule.classList.remove("active");
+  refs.portsModule.classList.add("hidden");
   refs.reservedModule.classList.add("active");
   refs.reservedModule.classList.remove("hidden");
   renderReservedModule(key);
@@ -197,6 +248,10 @@ async function applySession(session) {
   state.records = [];
   state.history = [];
   state.selectedId = null;
+  state.portBerths = [];
+  state.shippingAgents = [];
+  state.portsLoaded = false;
+  state.selectedPortId = null;
 
   if (!session) {
     refs.authPanel.classList.remove("hidden");
@@ -215,8 +270,10 @@ async function applySession(session) {
   await ensureProfile();
   await loadModule();
   await loadRecords();
+  await loadPortData();
   renderProfile();
   renderRecords();
+  renderPortsModuleStatus();
 }
 
 async function handleAuth(event, mode) {
@@ -316,6 +373,31 @@ async function loadRecords() {
   populateRegionFilter();
 }
 
+async function loadPortData() {
+  if (!state.supabase) return;
+
+  refs.portsTableBody.innerHTML = `<tr><td colspan="7">载入中...</td></tr>`;
+
+  const [berthsResult, agentsResult] = await Promise.all([
+    state.supabase.from("port_berths").select("*").order("code", { ascending: true }),
+    state.supabase.from("shipping_agents").select("*").order("code", { ascending: true }),
+  ]);
+
+  if (berthsResult.error || agentsResult.error) {
+    const message = berthsResult.error?.message || agentsResult.error?.message || "港口模块载入失败";
+    refs.portsTableBody.innerHTML = `<tr><td colspan="7">${escapeHtml(message)}</td></tr>`;
+    refs.portModuleCount.textContent = "需运行 SQL";
+    state.portsLoaded = false;
+    return;
+  }
+
+  state.portBerths = berthsResult.data || [];
+  state.shippingAgents = agentsResult.data || [];
+  state.portsLoaded = true;
+  populatePortFilter();
+  renderPortsModuleStatus();
+}
+
 async function loadHistory() {
   refs.historyBody.innerHTML = `<tr><td colspan="6">载入中...</td></tr>`;
   refs.historyMessage.textContent = "";
@@ -354,6 +436,21 @@ function renderProfile() {
 function renderModuleStatus() {
   const count = state.records.length;
   refs.moduleRecordCount.textContent = count ? `${count} 家企业` : "暂无记录";
+}
+
+function renderPortsModuleStatus() {
+  const count = state.portBerths.length + state.shippingAgents.length;
+  refs.portModuleCount.textContent = count ? `${count} 条记录` : "需运行 SQL";
+}
+
+function populatePortFilter() {
+  const selected = refs.portNameFilter.value;
+  const ports = [...new Set([
+    ...state.portBerths.map((record) => record.port_name),
+    ...state.shippingAgents.map((record) => record.port_name),
+  ].filter(Boolean))].sort((a, b) => a.localeCompare(b, "zh-CN"));
+  refs.portNameFilter.innerHTML = `<option value="">全部</option>${ports.map((port) => `<option value="${escapeHtml(port)}">${escapeHtml(port)}</option>`).join("")}`;
+  refs.portNameFilter.value = selected;
 }
 
 function populateRegionFilter() {
@@ -396,6 +493,153 @@ function renderRecords() {
   renderMetrics(records);
   renderTable(records);
   renderDetail();
+}
+
+function getFilteredPortRows() {
+  const keyword = refs.portSearchInput.value.trim().toLowerCase();
+  const portName = refs.portNameFilter.value;
+  const minDraft = Number(refs.portDraftFilter.value || 0);
+  const minDwt = Number(refs.portDwtFilter.value || 0);
+  const rows = state.activePortView === "agents" ? state.shippingAgents : state.portBerths;
+
+  return rows.filter((row) => {
+    const text = Object.values(row).join(" ").toLowerCase();
+    const matchesCommon = (!keyword || text.includes(keyword))
+      && (!portName || row.port_name === portName);
+
+    if (state.activePortView === "agents") return matchesCommon;
+
+    return matchesCommon
+      && Number(row.draft_m || 0) >= minDraft
+      && Number(row.max_dwt_tons || 0) >= minDwt;
+  });
+}
+
+function renderPortsModule() {
+  refs.portDraftFilter.disabled = state.activePortView === "agents";
+  refs.portDwtFilter.disabled = state.activePortView === "agents";
+
+  const rows = getFilteredPortRows();
+  renderPortMetrics(rows);
+  renderPortTable(rows);
+  renderPortDetail();
+}
+
+function renderPortMetrics(rows) {
+  const ports = new Set(rows.map((row) => row.port_name).filter(Boolean));
+  refs.portMetricPorts.textContent = ports.size;
+  refs.portMetricRows.textContent = rows.length;
+
+  if (state.activePortView === "agents") {
+    refs.portMetricDraft.textContent = "-";
+    refs.portMetricDwt.textContent = "-";
+    return;
+  }
+
+  refs.portMetricDraft.textContent = formatNumber(Math.max(0, ...rows.map((row) => Number(row.draft_m || 0))));
+  refs.portMetricDwt.textContent = formatNumber(Math.max(0, ...rows.map((row) => Number(row.max_dwt_tons || 0))));
+}
+
+function renderPortTable(rows) {
+  if (state.activePortView === "agents") {
+    refs.portsTableHead.innerHTML = `
+      <th>编号</th>
+      <th>港口</th>
+      <th>船代公司</th>
+      <th>电话</th>
+      <th>邮箱</th>
+    `;
+    refs.portsTableBody.innerHTML = rows.length ? rows.map((record) => `
+      <tr data-port-id="${record.id}" class="${record.id === state.selectedPortId ? "selected" : ""}">
+        <td>${escapeHtml(record.code || "")}</td>
+        <td>${escapeHtml(record.port_name || "")}</td>
+        <td class="company-name">${escapeHtml(record.agency_name || "")}</td>
+        <td>${escapeHtml(shortText(record.tel, 42))}</td>
+        <td>${escapeHtml(shortText(record.email, 42))}</td>
+      </tr>
+    `).join("") : `<tr><td colspan="5">没有匹配记录</td></tr>`;
+  } else {
+    refs.portsTableHead.innerHTML = `
+      <th>编号</th>
+      <th>所在地</th>
+      <th>港口</th>
+      <th>码头</th>
+      <th>泊位</th>
+      <th class="num">吃水</th>
+      <th class="num">最大载重吨</th>
+      <th>特殊要求</th>
+    `;
+    refs.portsTableBody.innerHTML = rows.length ? rows.map((record) => `
+      <tr data-port-id="${record.id}" class="${record.id === state.selectedPortId ? "selected" : ""}">
+        <td>${escapeHtml(record.code || "")}</td>
+        <td>${escapeHtml(record.location || "")}</td>
+        <td class="company-name">${escapeHtml(record.port_name || "")}</td>
+        <td>${escapeHtml(record.terminal_name || "")}</td>
+        <td>${escapeHtml(record.berth || "")}</td>
+        <td class="num">${formatNumber(record.draft_m)} 米</td>
+        <td class="num">${formatNumber(record.max_dwt_tons)} 吨</td>
+        <td>${escapeHtml(shortText(record.special_requirements, 34))}</td>
+      </tr>
+    `).join("") : `<tr><td colspan="8">没有匹配记录</td></tr>`;
+  }
+
+  refs.portsTableBody.querySelectorAll("tr[data-port-id]").forEach((row) => {
+    row.addEventListener("click", () => {
+      state.selectedPortId = row.dataset.portId;
+      renderPortsModule();
+    });
+  });
+}
+
+function renderPortDetail() {
+  const rows = state.activePortView === "agents" ? state.shippingAgents : state.portBerths;
+  const record = rows.find((item) => item.id === state.selectedPortId);
+  if (!record) {
+    refs.emptyPortDetail.classList.remove("hidden");
+    refs.portRecordDetail.classList.add("hidden");
+    refs.portRecordDetail.innerHTML = "";
+    return;
+  }
+
+  refs.emptyPortDetail.classList.add("hidden");
+  refs.portRecordDetail.classList.remove("hidden");
+
+  if (state.activePortView === "agents") {
+    refs.portRecordDetail.innerHTML = `
+      <header>
+        <h2>${escapeHtml(record.agency_name || record.port_name)}</h2>
+        <span class="badge">${escapeHtml(record.port_name || "")}</span>
+      </header>
+      <div class="detail-list">
+        ${detailRow("编号", record.code || "-")}
+        ${detailRow("港口", record.port_name || "-")}
+        ${detailRow("电话", record.tel || "-")}
+        ${detailRow("传真", record.fax || "-")}
+        ${detailRow("邮箱", record.email || "-")}
+        ${detailRow("联系人", record.contact_persons || "-")}
+        ${detailRow("来源", record.source_document || "-")}
+      </div>
+    `;
+    return;
+  }
+
+  refs.portRecordDetail.innerHTML = `
+    <header>
+      <h2>${escapeHtml(record.port_name)}</h2>
+      <span class="badge">${escapeHtml(record.location || "港口")}</span>
+    </header>
+    <div class="detail-list">
+      ${detailRow("编号", record.code || "-")}
+      ${detailRow("所在地", record.location || "-")}
+      ${detailRow("码头", record.terminal_name || "-")}
+      ${detailRow("泊位", record.berth || "-")}
+      ${detailRow("吃水", `${formatNumber(record.draft_m)} 米`)}
+      ${detailRow("最大载重吨", `${formatNumber(record.max_dwt_tons)} 吨`)}
+      ${detailRow("夏天海水密度", record.summer_density || "-")}
+      ${detailRow("特殊要求", record.special_requirements || "-")}
+      ${detailRow("来源", record.source_document || "-")}
+    </div>
+  `;
 }
 
 function renderMetrics(records) {
@@ -639,6 +883,40 @@ function exportCsv(records) {
   downloadBlob(`\ufeff${csv}`, "text/csv;charset=utf-8", "capacity-license-ratio.csv");
 }
 
+function exportPortCsv(records) {
+  const headers = state.activePortView === "agents"
+    ? ["编号", "港口", "船代公司", "地址", "电话", "传真", "邮箱", "联系人", "原始文本", "来源"]
+    : ["编号", "所在地", "港口", "码头", "泊位", "吃水(米)", "最大载重吨", "夏天海水密度", "特殊要求", "来源"];
+  const rows = state.activePortView === "agents"
+    ? records.map((record) => [
+      record.code,
+      record.port_name,
+      record.agency_name,
+      record.address,
+      record.tel,
+      record.fax,
+      record.email,
+      record.contact_persons,
+      record.raw_text,
+      record.source_document,
+    ])
+    : records.map((record) => [
+      record.code,
+      record.location,
+      record.port_name,
+      record.terminal_name,
+      record.berth,
+      record.draft_m,
+      record.max_dwt_tons,
+      record.summer_density,
+      record.special_requirements,
+      record.source_document,
+    ]);
+  const csv = [headers, ...rows].map((row) => row.map(csvCell).join(",")).join("\n");
+  const filename = state.activePortView === "agents" ? "shipping-agents.csv" : "port-berths.csv";
+  downloadBlob(`\ufeff${csv}`, "text/csv;charset=utf-8", filename);
+}
+
 function summarizeChange(item) {
   if (item.action === "INSERT") return "新增记录";
   if (item.action === "DELETE") return "删除记录";
@@ -712,6 +990,12 @@ function formatNumber(value) {
 function formatDate(value) {
   if (!value) return "-";
   return new Intl.DateTimeFormat("zh-CN", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
+}
+
+function shortText(value, limit) {
+  const text = String(value || "").replace(/\s+/g, " ").trim();
+  if (text.length <= limit) return text;
+  return `${text.slice(0, limit)}...`;
 }
 
 function csvCell(value) {

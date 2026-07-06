@@ -5,9 +5,10 @@
 ## 已实现
 
 - Supabase 邮箱登录/注册
-- 业务模块工作台，当前接入 `备案产能和自动进口证发放比例`
+- 业务模块工作台，当前接入 `备案产能和自动进口证发放比例`、`港口与船代信息`
 - 其他大模块入口占位，后续可以继续扩展独立数据库模块
 - 企业备案产能、自动进口证额度查询、筛选、汇总
+- 港口吃水、码头泊位、船代通讯录查询和导出
 - 登录用户新增、修改、删除企业备案记录
 - 操作历史和错误编辑撤回
 - 当前查询结果导出 CSV
@@ -24,6 +25,8 @@
 1. `supabase/migrations/20260702000000_init.sql`
 2. `supabase/migrations/20260706000000_license_ratio_module.sql`
 3. `supabase/migrations/20260706001000_seed_license_allocations.sql`
+4. `supabase/migrations/20260706002000_port_logistics_module.sql`
+5. `supabase/migrations/20260706003000_seed_port_logistics.sql`
 
 当前模块的权限口径是：只要用户通过 Supabase 登录，就可以查阅、新增、修改、删除，并可在操作历史里撤回错误编辑。`profiles.role` 字段仍保留，后续如果要做管理员审批或分级权限，可以继续使用。
 
@@ -60,8 +63,10 @@ python3 -m http.server 8000
 - `enterprises`：备案企业和备案产能
 - `import_reports`：进口报告
 - `documents`：来源文件和附件索引
+- `port_berths`：港口、码头、泊位、吃水和最大载重吨
+- `shipping_agents`：港口船代公司和通讯录
 
-当前页面先接入了 `enterprises`，后续可以继续把进口合同、发运抵港、许可证扣减、附件上传做成独立页面。
+当前页面先接入了 `enterprises`、`port_berths` 和 `shipping_agents`，后续可以继续把进口合同、发运抵港、许可证扣减、附件上传做成独立页面。
 
 ## 2026-07-06 功能升级
 
@@ -84,3 +89,21 @@ python3 -m http.server 8000
 2. `supabase/migrations/20260706001000_seed_license_allocations.sql`
 
 第一个文件会调整库表、权限和撤回函数；第二个文件是合并后的权威 seed，会导入省市、统计地区、备案产能、2025/2026 自动证额度等 31 行数据。
+
+## 2026-07-06 港口模块
+
+新增模块：`港口与船代信息`
+
+新增能力：
+
+- 港口吃水和最大载重吨查询
+- 港口、码头、泊位、夏天海水密度和特殊要求维护
+- 船代公司、电话、传真、邮箱、联系人和原始文本导入
+- 当前查询结果导出 CSV
+
+需要在 Supabase SQL Editor 里继续执行：
+
+1. `supabase/migrations/20260706002000_port_logistics_module.sql`
+2. `supabase/migrations/20260706003000_seed_port_logistics.sql`
+
+第二个文件来自 `中国港口信息.xlsx`，会导入 57 条港口吃水记录和 16 条船代通讯录记录。

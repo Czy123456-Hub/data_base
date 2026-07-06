@@ -572,6 +572,8 @@ tbody tr.selected {
   margin: 0;
   font-weight: 900;
   text-align: right;
+  word-break: break-word;
+  white-space: pre-line;
 }
 
 .record-form {
@@ -627,6 +629,14 @@ tbody tr.selected {
 
 .reserved-view {
   margin-top: 14px;
+}
+
+.port-metrics {
+  grid-template-columns: repeat(4, minmax(150px, 1fr));
+}
+
+.port-grid .detail-row {
+  align-items: flex-start;
 }
 
 .reserved-tabs .tab {
