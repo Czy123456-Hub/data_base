@@ -21,6 +21,8 @@ const refs = {
   signOutBtn: document.querySelector("#signOutBtn"),
   moduleTitle: document.querySelector("#moduleTitle"),
   moduleName: document.querySelector("#moduleName"),
+  primaryModuleCard: document.querySelector("#primaryModuleCard"),
+  moduleRecordCount: document.querySelector("#moduleRecordCount"),
   searchInput: document.querySelector("#searchInput"),
   regionFilter: document.querySelector("#regionFilter"),
   groupFilter: document.querySelector("#groupFilter"),
@@ -80,17 +82,10 @@ function isConfigured(config) {
 
 function wireUi() {
   document.querySelectorAll(".tab").forEach((tab) => {
-    tab.addEventListener("click", async () => {
-      document.querySelectorAll(".tab").forEach((item) => item.classList.remove("active"));
-      document.querySelectorAll(".view").forEach((view) => view.classList.remove("active"));
-      tab.classList.add("active");
-      document.querySelector(`#${tab.dataset.view}`).classList.add("active");
-      if (tab.dataset.view === "historyView") {
-        await loadHistory();
-      }
-    });
+    tab.addEventListener("click", () => activateView(tab.dataset.view));
   });
 
+  refs.primaryModuleCard.addEventListener("click", () => activateView("queryView"));
   refs.authForm.addEventListener("submit", (event) => handleAuth(event, "signin"));
   refs.authForm.querySelector("[data-auth-mode='signup']").addEventListener("click", (event) => handleAuth(event, "signup"));
   refs.signOutBtn.addEventListener("click", signOut);
@@ -108,6 +103,18 @@ function wireUi() {
   refs.resetFormBtn.addEventListener("click", () => setFormRecord(null));
   refs.deleteRecordBtn.addEventListener("click", deleteRecord);
   refs.refreshHistoryBtn.addEventListener("click", loadHistory);
+}
+
+async function activateView(viewId) {
+  document.querySelectorAll(".tab").forEach((item) => {
+    item.classList.toggle("active", item.dataset.view === viewId);
+  });
+  document.querySelectorAll(".view").forEach((view) => {
+    view.classList.toggle("active", view.id === viewId);
+  });
+  if (viewId === "historyView") {
+    await loadHistory();
+  }
 }
 
 async function applySession(session) {
@@ -229,6 +236,7 @@ async function loadRecords() {
   }
 
   state.records = data || [];
+  renderModuleStatus();
   populateRegionFilter();
 }
 
@@ -258,12 +266,18 @@ function renderProfile() {
   refs.roleBadge.classList.remove("muted");
   refs.profileEmail.textContent = state.profile?.email || state.session?.user?.email || "-";
   refs.profileRole.textContent = "可查阅、编辑、删除、撤回";
+  renderModuleStatus();
 
   refs.enterpriseForm.querySelectorAll("input, select, textarea, button").forEach((element) => {
     element.disabled = false;
   });
   refs.enterpriseForm.elements.license_2025_ratio.disabled = true;
   refs.enterpriseForm.elements.license_2026_ratio.disabled = true;
+}
+
+function renderModuleStatus() {
+  const count = state.records.length;
+  refs.moduleRecordCount.textContent = count ? `${count} 家企业` : "暂无记录";
 }
 
 function populateRegionFilter() {

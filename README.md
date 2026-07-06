@@ -5,12 +5,15 @@
 ## 已实现
 
 - Supabase 邮箱登录/注册
-- 企业备案产能查询、筛选、汇总
-- 新增和修改企业备案记录
-- admin 角色删除记录
+- 业务模块工作台，当前接入 `备案产能和自动进口证发放比例`
+- 其他大模块入口占位，后续可以继续扩展独立数据库模块
+- 企业备案产能、自动进口证额度查询、筛选、汇总
+- 登录用户新增、修改、删除企业备案记录
+- 操作历史和错误编辑撤回
 - 当前查询结果导出 CSV
 - Supabase RLS 权限控制
-- 初始 31 家原糖加工生产企业备案产能种子数据
+- 合并后的 31 家原糖加工企业备案产能和自动证 seed 数据
+- 浅蓝色业务系统界面
 
 ## 数据库部署
 
@@ -22,19 +25,7 @@
 2. `supabase/migrations/20260706000000_license_ratio_module.sql`
 3. `supabase/migrations/20260706001000_seed_license_allocations.sql`
 
-第一个用户注册后默认是 `viewer`，需要在 Supabase SQL Editor 里提升为管理员：
-
-```sql
-update public.profiles
-set role = 'admin'
-where email = '你的邮箱@example.com';
-```
-
-角色规则：
-
-- `viewer`：查询和导出
-- `editor`：查询、新增、修改
-- `admin`：查询、新增、修改、删除、授权
+当前模块的权限口径是：只要用户通过 Supabase 登录，就可以查阅、新增、修改、删除，并可在操作历史里撤回错误编辑。`profiles.role` 字段仍保留，后续如果要做管理员审批或分级权限，可以继续使用。
 
 ## GitHub Pages 配置
 
@@ -79,6 +70,7 @@ python3 -m http.server 8000
 新增能力：
 
 - 数据库模块命名：`database_modules`
+- 页面上以大模块方式组织业务数据库
 - 企业备案产能按 Excel 口径更新
 - 2025 / 2026 年自动进口许可证额度维护
 - 自动计算年度发放比例：`自动证额度 / 备案产能 / 10000`
