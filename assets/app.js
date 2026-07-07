@@ -576,11 +576,11 @@ function portTableColumnCount() {
 function renderPortTable(rows) {
   if (state.activePortView === "agents") {
     refs.portsTableHead.innerHTML = `
-      <th>编号</th>
-      <th>港口</th>
-      <th>船代公司</th>
-      <th>电话</th>
-      <th>邮箱</th>
+      <th class="port-code-col">编号</th>
+      <th class="port-name-col">港口</th>
+      <th class="agent-name-col">船代公司</th>
+      <th class="agent-tel-col">电话</th>
+      <th class="agent-email-col">邮箱</th>
     `;
 
     if (state.portLoadError) {
@@ -590,11 +590,11 @@ function renderPortTable(rows) {
 
     refs.portsTableBody.innerHTML = rows.length ? rows.map((record) => `
       <tr data-port-id="${record.id}" class="${record.id === state.selectedPortId ? "selected" : ""}">
-        <td>${escapeHtml(record.code || "")}</td>
-        <td>${escapeHtml(record.port_name || "")}</td>
-        <td class="company-name">${escapeHtml(record.agency_name || "")}</td>
-        <td>${escapeHtml(shortText(record.tel, 42))}</td>
-        <td>${escapeHtml(shortText(record.email, 42))}</td>
+        <td class="port-code-col">${escapeHtml(record.code || "")}</td>
+        <td class="port-name-col">${escapeHtml(record.port_name || "")}</td>
+        <td class="company-name agent-name-col">${escapeHtml(record.agency_name || "")}</td>
+        <td class="agent-tel-col">${escapeHtml(record.tel || "")}</td>
+        <td class="agent-email-col">${escapeHtml(record.email || "")}</td>
       </tr>
     `).join("") : `<tr><td colspan="5">没有匹配记录</td></tr>`;
   } else {
@@ -623,7 +623,7 @@ function renderPortTable(rows) {
         <td>${escapeHtml(record.berth || "")}</td>
         <td class="num">${formatNumber(record.draft_m)} 米</td>
         <td class="num">${formatNumber(record.max_dwt_tons)} 吨</td>
-        <td>${escapeHtml(shortText(record.special_requirements, 34))}</td>
+        <td>${escapeHtml(record.special_requirements || "")}</td>
       </tr>
     `).join("") : `<tr><td colspan="8">没有匹配记录</td></tr>`;
   }

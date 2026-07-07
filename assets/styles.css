@@ -616,6 +616,41 @@ tbody tr.selected {
   box-shadow: none;
 }
 
+.port-grid table {
+  table-layout: fixed;
+}
+
+.port-grid th,
+.port-grid td {
+  height: auto;
+  min-height: 48px;
+  padding: 10px 14px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.35;
+}
+
+.port-grid .port-code-col {
+  width: 86px;
+}
+
+.port-grid .port-name-col {
+  width: 96px;
+}
+
+.port-grid .agent-name-col {
+  width: 30%;
+}
+
+.port-grid .agent-tel-col {
+  width: 34%;
+}
+
+.port-grid .agent-email-col {
+  width: 24%;
+}
+
 .compact-button {
   min-height: 30px;
   padding: 0 10px;
@@ -640,7 +675,7 @@ tbody tr.selected {
 }
 
 .port-grid .detail-row-compact {
-  align-items: center;
+  align-items: flex-start;
   min-width: 0;
 }
 
@@ -649,11 +684,12 @@ tbody tr.selected {
 }
 
 .port-grid .detail-row-compact span:last-child {
+  flex: 1 1 auto;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  word-break: normal;
+  overflow: visible;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .reserved-tabs .tab {
