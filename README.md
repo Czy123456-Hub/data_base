@@ -107,3 +107,5 @@ python3 -m http.server 8000
 2. `supabase/migrations/20260706003000_seed_port_logistics.sql`
 
 第二个文件来自 `中国港口信息.xlsx`，会导入 57 条港口吃水记录和 16 条船代通讯录记录。
+
+如果后续更新船代通讯录 Excel，可以用 `scripts/generate_shipping_agents_seed.py` 重新生成 `shipping_agents` seed 段，避免电话、传真和联系人字段互相混在一起。

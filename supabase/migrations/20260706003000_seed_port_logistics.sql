@@ -97,57 +97,43 @@ with module as (
 ),
 rows (code, port_name, agency_name, address, tel, fax, email, contact_persons, raw_text) as (
 values
-  ('SA001', '防城港', 'China Ocean Shipping Agency Fangcheng (Penavico fangcheng)', 'Add:18 Friendship avenue gangkou district fangchenggang city,', 'Tel:86-770-2821790,
-Pic: Mr.Hong Xuzhen ((A.G.Manager & Manager of Shipping Department)) Direct line:86-770-6102209  Mobile Phone:86-18677000832
-Ms.Lynda Lin   (Deputy Manager of Shipping Department) Direct line:86-770-6102206  Mobile Phone:86-13507708234
-Mr.Andy Feng    (Deputy Manager of Shipping Department) Direct line:86-770-6102208  Mobile Phone:86-18607705789', 'Fax:86-770-2822083', 'Email:shipping@penavicofc.com', 'Pic: Mr.Hong Xuzhen ((A.G.Manager & Manager of Shipping Department)) Direct line:86-770-6102209  Mobile Phone:86-18677000832
-Ms.Lynda Lin   (Deputy Manager of Shipping Department) Direct line:86-770-6102206  Mobile Phone:86-13507708234
-Mr.Andy Feng    (Deputy Manager of Shipping Department) Direct line:86-770-6102208  Mobile Phone:86-18607705789', 'China Ocean Shipping Agency Fangcheng (Penavico fangcheng)
+  ('SA001', '防城港', 'China Ocean Shipping Agency Fangcheng (Penavico fangcheng)', '18 Friendship avenue gangkou district fangchenggang city,', '86-770-2821790,', '86-770-2822083', 'shipping@penavicofc.com', 'Pic: Mr.Hong Xuzhen ((A.G.Manager & Manager of Shipping Department)) Direct line:86-770-6102209 Mobile Phone:86-18677000832 / Ms.Lynda Lin (Deputy Manager of Shipping Department) Direct line:86-770-6102206 Mobile Phone:86-13507708234 / Mr.Andy Feng (Deputy Manager of Shipping Department) Direct line:86-770-6102208 Mobile Phone:86-18607705789', 'China Ocean Shipping Agency Fangcheng (Penavico fangcheng)
 Add:18 Friendship avenue gangkou district fangchenggang city,
 Zip code:538001
-Tel:86-770-2821790, 
+Tel:86-770-2821790,
 Fax:86-770-2822083
-Email:shipping@penavicofc.com 
+Email:shipping@penavicofc.com
 Pic: Mr.Hong Xuzhen ((A.G.Manager & Manager of Shipping Department)) Direct line:86-770-6102209  Mobile Phone:86-18677000832
       Ms.Lynda Lin   (Deputy Manager of Shipping Department) Direct line:86-770-6102206  Mobile Phone:86-13507708234
       Mr.Andy Feng    (Deputy Manager of Shipping Department) Direct line:86-770-6102208  Mobile Phone:86-18607705789'),
-  ('SA002', '青岛', 'Qingdao Ocean Favor Int''l Shipping Agency Co., Ltd', 'Add: Room 1-Bing 1, Yi Zhong Gao Shan, 26 Jingde Road,', 'Tel : 86-532- 82865727,82881160,82881131,66883318 (24hrs)', 'Fax : 86-532- 66882669', 'E-mail: qingdao@oceanfavor.com', 'PIC: Ms. Luan Yan (86-13706346822)', 'Qingdao Ocean Favor Int''l Shipping Agency Co., Ltd 
+  ('SA002', '青岛', 'Qingdao Ocean Favor Int''l Shipping Agency Co., Ltd', 'Room 1-Bing 1, Yi Zhong Gao Shan, 26 Jingde Road,', '86-532- 82865727,82881160,82881131,66883318 (24hrs)', '86-532- 66882669', 'qingdao@oceanfavor.com', 'PIC: Ms. Luan Yan (86-13706346822)', 'Qingdao Ocean Favor Int''l Shipping Agency Co., Ltd
 Add: Room 1-Bing 1, Yi Zhong Gao Shan, 26 Jingde Road,
-Shinan District, Qingdao, China  Post code: 266073 
+Shinan District, Qingdao, China  Post code: 266073
 Tel : 86-532- 82865727,82881160,82881131,66883318 (24hrs)
 Fax : 86-532- 66882669
 E-mail: qingdao@oceanfavor.com
 PIC: Ms. Luan Yan (86-13706346822)'),
-  ('SA003', '青岛', 'China Ocean Shipping Agency, Qingdao (Penavico Qingdao）', null, 'Tel:0086-532-82916539,0086-532-82651555,0086-532-82653300/3330 (24hrs)
-Mob:0086-185-61568656', 'Fax:0086-532-82655800', 'Email: fanghao@penavicoqd.com,shipping@penavicoqd.com', null, 'China Ocean Shipping Agency, Qingdao (Penavico Qingdao）
+  ('SA003', '青岛', 'China Ocean Shipping Agency, Qingdao (Penavico Qingdao）', null, '0086-532-82916539,0086-532-82651555,0086-532-82653300/3330 (24hrs) / 0086-185-61568656', '0086-532-82655800', 'fanghao@penavicoqd.com / shipping@penavicoqd.com', null, 'China Ocean Shipping Agency, Qingdao (Penavico Qingdao）
 11F,No.21 Wuxia Road, Qingdao, P.R.China
 Post Code 266002
 Tel:0086-532-82916539,0086-532-82651555,0086-532-82653300/3330 (24hrs)
 Mob:0086-185-61568656
 Fax:0086-532-82655800
 Email: fanghao@penavicoqd.com,shipping@penavicoqd.com'),
-  ('SA004', '鲅鱼圈', 'CHINA OCEAN SHIPPING AGENCY, YINGKOU', 'Add:Penavico Bldg. Xingang Rd. #1, Bayuquan Dist.Yingkou,China', 'Tel:0417-6152002(Direct Line)6151639 (24Hrs Service)', 'Fax:0417-6151637', 'E-mail: shipping@penavicoyk.com', null, 'CHINA OCEAN SHIPPING AGENCY, YINGKOU   
+  ('SA004', '鲅鱼圈', 'CHINA OCEAN SHIPPING AGENCY, YINGKOU', 'Penavico Bldg. Xingang Rd. #1, Bayuquan Dist.Yingkou,China', '0417-6152002(Direct Line)6151639 (24Hrs Service) / 18624178795', '0417-6151637', 'shipping@penavicoyk.com', null, 'CHINA OCEAN SHIPPING AGENCY, YINGKOU
 Add:Penavico Bldg. Xingang Rd. #1, Bayuquan Dist.Yingkou,China
-Tel:0417-6152002(Direct Line)6151639 (24Hrs Service) 
-Fax:0417-6151637 
+Tel:0417-6152002(Direct Line)6151639 (24Hrs Service)
+Fax:0417-6151637
 Mobile:18624178795
 E-mail: shipping@penavicoyk.com'),
-  ('SA005', '南通', 'Nantong Singa Int''l Ocean Shipping Agency Ltd.', 'Add:16F, Overseas Friendship Building, 88# South Gongnong Road, Nantong, China', 'TEL:86-513-83519998(24hrs),
-Mob:+86-13809080069', 'Fax:86-513-51012111', 'E-mail:shpg@singant.com.cn', null, 'Nantong Singa Int''l Ocean Shipping Agency Ltd.
+  ('SA005', '南通', 'Nantong Singa Int''l Ocean Shipping Agency Ltd.', '16F, Overseas Friendship Building, 88# South Gongnong Road, Nantong, China', '86-513-83519998(24hrs), / +86-13809080069', '86-513-51012111', 'shpg@singant.com.cn', null, 'Nantong Singa Int''l Ocean Shipping Agency Ltd.
 Add:16F, Overseas Friendship Building, 88# South Gongnong Road, Nantong, China
 TEL:86-513-83519998(24hrs),
 Mob:+86-13809080069
 Fax:86-513-51012111
 James Wang
 E-mail:shpg@singant.com.cn'),
-  ('SA006', '锦州', 'Jinzhou Ocean Favor Shipping Agency Co., Ltd', 'ADDRESS: NO.2, TIAN GANG HUA YUAN, JINZHOU ECONOMIC &TECHNOLOGY DEVELOPING ZONE, JINZHOU CITY, LIAONING, CHINA.', 'Office phone：0416 7906055
-Cell phone：138 9838 8689
-Office phone：0416 7906077
-Cell phone：139 4168 0186
-Office phone：0416 7906077
-Cell phone：135 0406 3682', 'FAX NO.: 0416-357 9377', 'E-MAIL: jinzhou@oceanfavor.com', 'Contact Details:
-PIC：Cao Fuxiang
-OPERATION MANAGER: LIU TONG', 'Jinzhou Ocean Favor Shipping Agency Co., Ltd
+  ('SA006', '锦州', 'Jinzhou Ocean Favor Shipping Agency Co., Ltd', 'NO.2, TIAN GANG HUA YUAN, JINZHOU ECONOMIC &TECHNOLOGY DEVELOPING ZONE, JINZHOU CITY, LIAONING, CHINA.', '0416-7906077 / 0416 7906055 / 138 9838 8689 / 0416 7906077 / 139 4168 0186 / 135 0406 3682', 'NO.: 0416-357 9377', 'jinzhou@oceanfavor.com', 'Contact Details: / PIC：Cao Fuxiang / OPERATION MANAGER: LIU TONG', 'Jinzhou Ocean Favor Shipping Agency Co., Ltd
 ADDRESS: NO.2, TIAN GANG HUA YUAN, JINZHOU ECONOMIC &TECHNOLOGY DEVELOPING ZONE, JINZHOU CITY, LIAONING, CHINA.
 POST CODE: 121007
 TELE NO: 0416-7906077
@@ -157,72 +143,60 @@ VHF: CHANNEL 16 EXT 86+416 7906077
 Contact Details:
 PIC：Cao Fuxiang
 Office phone：0416 7906055
-Cell phone：138 9838 8689 
+Cell phone：138 9838 8689
 OPERATION MANAGER: LIU TONG
 Office phone：0416 7906077
-Cell phone：139 4168 0186 
+Cell phone：139 4168 0186
 BOARDING AGENT: FENG BIAO
 Office phone：0416 7906077
 Cell phone：135 0406 3682'),
-  ('SA007', '湛江', 'ZHANJIANG PACIFIC INTERNATIONAL SHIPPING AGENCY LTD', 'Add:Room A1706,17/F Yifu Building,No.28 Renmin Road South,Xiashan Zhanjiang,Guangdong,China', 'Tel:+86 759 2299722 /2299829
-Mob:+86 13902502624', 'Fax:+86 759 2299860', 'Email:pacificshipping@vip.163.com', 'PIC:MR LUO ZICONG', 'ZHANJIANG PACIFIC INTERNATIONAL SHIPPING AGENCY LTD
+  ('SA007', '湛江', 'ZHANJIANG PACIFIC INTERNATIONAL SHIPPING AGENCY LTD', 'Room A1706,17/F Yifu Building,No.28 Renmin Road South,Xiashan Zhanjiang,Guangdong,China', '+86 759 2299722 /2299829 / +86 13902502624', '+86 759 2299860', 'pacificshipping@vip.163.com / pacificshipping@21cn.net / shipping@zjpacific.com', 'PIC:MR LUO ZICONG', 'ZHANJIANG PACIFIC INTERNATIONAL SHIPPING AGENCY LTD
 Add:Room A1706,17/F Yifu Building,No.28 Renmin Road South,Xiashan Zhanjiang,Guangdong,China
 Postcode:524001
 Tel:+86 759 2299722 /2299829
 Fax:+86 759 2299860
 Email:pacificshipping@vip.163.com
-pacificshipping@21cn.net, shipping@zjpacific.com
-PIC:MR LUO ZICONG
+pacificshipping@21cn.net, shipping@zjpacific.com
+PIC:MR LUO ZICONG
 Mob:+86 13902502624
-Website: www.zjpacific.com'),
-  ('SA008', '大丰港', 'YANCHENG LIANFENG INTERNATIONAL SHIPPING AGENCY CO., LTD.', 'ADD:Room 2001, Building 1, Fiancial City, No.5 Century Boulevard, Yancheng City, Jiangsu, China', 'TEL: 0086-0515-88356662
-MOB:     (00860)13770028333  (Mr.Paul Xu)', 'FAX: 0086-0515-88352085', 'E-mail: lfcd@lfshippingagency.com', 'MOB:     (00860)13770028333  (Mr.Paul Xu)
-(00860)13851087699 (Mr.Jemery Zheng)
-(00860)13851050946 (Ms.Iris Dong)
-(00860)13770066556 (Ms.Sheila Shi)', 'YANCHENG LIANFENG INTERNATIONAL SHIPPING AGENCY CO., LTD.
-ADD:Room 2001, Building 1, Fiancial City, No.5 Century Boulevard, Yancheng City, Jiangsu, China   
-TEL: 0086-0515-88356662 
+Website: www.zjpacific.com'),
+  ('SA008', '大丰港', 'YANCHENG LIANFENG INTERNATIONAL SHIPPING AGENCY CO., LTD.', 'Room 2001, Building 1, Fiancial City, No.5 Century Boulevard, Yancheng City, Jiangsu, China', '0086-0515-88356662', '0086-0515-88352085', 'lfcd@lfshippingagency.com', '(00860)13770028333 (Mr.Paul Xu) / (00860)13851087699 (Mr.Jemery Zheng) / (00860)13851050946 (Ms.Iris Dong) / (00860)13770066556 (Ms.Sheila Shi)', 'YANCHENG LIANFENG INTERNATIONAL SHIPPING AGENCY CO., LTD.
+ADD:Room 2001, Building 1, Fiancial City, No.5 Century Boulevard, Yancheng City, Jiangsu, China
+TEL: 0086-0515-88356662
 FAX: 0086-0515-88352085
 E-mail: lfcd@lfshippingagency.com
 MOB:     (00860)13770028333  (Mr.Paul Xu)
-     (00860)13851087699 (Mr.Jemery Zheng)  
+     (00860)13851087699 (Mr.Jemery Zheng)
      (00860)13851050946 (Ms.Iris Dong)
      (00860)13770066556 (Ms.Sheila Shi)'),
-  ('SA009', '南沙港', 'GUANGZHOU CIRCLE INTERNATIONAL SHIPPING AGENCY CO., LTD', 'ADDRESS：3/F, NO. 319, GANGQIAN ROAD, HUANGPU, GUANGZHOU, 510700 P. R. CHINA', 'TEL: 86-20-82290475 / 82293013 / 82280755 / 82292973', 'FAX: 86-20-82274386', 'E-MAIL:OPERATION@CIRCLELOG.COM', 'VICE GENERAL MANAGER: WAVE ZHANG                  +86-20-82290475
-MARKETING MANAGER: JAMES ZHANG                    +86-20-82273302
-SHIPPING MANAGER: ALEX WU                            +86-20-82292973
-DOCUMENT MANAGER: MONA ZHANG                     +86-20-82293061', 'GUANGZHOU CIRCLE INTERNATIONAL SHIPPING AGENCY CO., LTD
+  ('SA009', '南沙港', 'GUANGZHOU CIRCLE INTERNATIONAL SHIPPING AGENCY CO., LTD', '3/F, NO. 319, GANGQIAN ROAD, HUANGPU, GUANGZHOU, 510700 P. R. CHINA', '86-20-82290475 / 82293013 / 82280755 / 82292973', '86-20-82274386', 'OPERATION@CIRCLELOG.COM', 'VICE GENERAL MANAGER: WAVE ZHANG +86-20-82290475 / MARKETING MANAGER: JAMES ZHANG +86-20-82273302 / SHIPPING MANAGER: ALEX WU +86-20-82292973 / DOCUMENT MANAGER: MONA ZHANG +86-20-82293061', 'GUANGZHOU CIRCLE INTERNATIONAL SHIPPING AGENCY CO., LTD
 ADDRESS：3/F, NO. 319, GANGQIAN ROAD, HUANGPU, GUANGZHOU, 510700 P. R. CHINA
 TEL: 86-20-82290475 / 82293013 / 82280755 / 82292973
-FAX: 86-20-82274386 
-TLX: 051 94076045 GZCT G 
-E-MAIL:OPERATION@CIRCLELOG.COM 
- 
+FAX: 86-20-82274386
+TLX: 051 94076045 GZCT G
+E-MAIL:OPERATION@CIRCLELOG.COM
+
 VICE GENERAL MANAGER: WAVE ZHANG                  +86-20-82290475
 MARKETING MANAGER: JAMES ZHANG                    +86-20-82273302
 SHIPPING MANAGER: ALEX WU                            +86-20-82292973
 DOCUMENT MANAGER: MONA ZHANG                     +86-20-82293061'),
-  ('SA010', '南沙港', 'GUANGZHOU QIAOHENG INTERNATIONAL SHIPPING AGENCY CO.,LTD', 'ADDRESS: ROOM 305, NO.8 OFFICE BLOCK, NO. 5 QIHANG ROAD,LONGXUE STREET, NANSHA DISTRICT, GUANGZHOU, CHINA. ZIP:511457', 'MB: 86-13926173573', null, 'E-MAIL: nanshaops@circlelog.com', null, 'GUANGZHOU QIAOHENG INTERNATIONAL SHIPPING AGENCY CO.,LTD
+  ('SA010', '南沙港', 'GUANGZHOU QIAOHENG INTERNATIONAL SHIPPING AGENCY CO.,LTD', 'ROOM 305, NO.8 OFFICE BLOCK, NO. 5 QIHANG ROAD,LONGXUE STREET, NANSHA DISTRICT, GUANGZHOU, CHINA. ZIP:511457', '86-13926173573', null, 'nanshaops@circlelog.com', 'OP: TOM', 'GUANGZHOU QIAOHENG INTERNATIONAL SHIPPING AGENCY CO.,LTD
 ADDRESS: ROOM 305, NO.8 OFFICE BLOCK, NO. 5 QIHANG ROAD,LONGXUE STREET, NANSHA DISTRICT, GUANGZHOU, CHINA. ZIP:511457
 OP: TOM
 MB: 86-13926173573
 E-MAIL: nanshaops@circlelog.com'),
-  ('SA011', '黄埔港', 'GUANGZHOU CIRCLE INTERNATIONAL SHIPPING AGENCY CO., LTD', 'ADDRESS：3/F, NO. 319, GANGQIAN ROAD, HUANGPU, GUANGZHOU, 510700 P. R. CHINA', 'TEL: 86-20-82290475 / 82293013 / 82280755 / 82292973', 'FAX: 86-20-82274386', 'E-MAIL:OPERATION@CIRCLELOG.COM', 'VICE GENERAL MANAGER: WAVE ZHANG                  +86-20-82290475
-MARKETING MANAGER: JAMES ZHANG                    +86-20-82273302
-SHIPPING MANAGER: ALEX WU                            +86-20-82292973
-DOCUMENT MANAGER: MONA ZHANG                     +86-20-82293061', 'GUANGZHOU CIRCLE INTERNATIONAL SHIPPING AGENCY CO., LTD
+  ('SA011', '黄埔港', 'GUANGZHOU CIRCLE INTERNATIONAL SHIPPING AGENCY CO., LTD', '3/F, NO. 319, GANGQIAN ROAD, HUANGPU, GUANGZHOU, 510700 P. R. CHINA', '86-20-82290475 / 82293013 / 82280755 / 82292973', '86-20-82274386', 'OPERATION@CIRCLELOG.COM', 'VICE GENERAL MANAGER: WAVE ZHANG +86-20-82290475 / MARKETING MANAGER: JAMES ZHANG +86-20-82273302 / SHIPPING MANAGER: ALEX WU +86-20-82292973 / DOCUMENT MANAGER: MONA ZHANG +86-20-82293061', 'GUANGZHOU CIRCLE INTERNATIONAL SHIPPING AGENCY CO., LTD
 ADDRESS：3/F, NO. 319, GANGQIAN ROAD, HUANGPU, GUANGZHOU, 510700 P. R. CHINA
 TEL: 86-20-82290475 / 82293013 / 82280755 / 82292973
-FAX: 86-20-82274386 
-TLX: 051 94076045 GZCT G 
-E-MAIL:OPERATION@CIRCLELOG.COM 
- 
+FAX: 86-20-82274386
+TLX: 051 94076045 GZCT G
+E-MAIL:OPERATION@CIRCLELOG.COM
+
 VICE GENERAL MANAGER: WAVE ZHANG                  +86-20-82290475
 MARKETING MANAGER: JAMES ZHANG                    +86-20-82273302
 SHIPPING MANAGER: ALEX WU                            +86-20-82292973
 DOCUMENT MANAGER: MONA ZHANG                     +86-20-82293061'),
-  ('SA012', '连云港', 'Lianyungang Harvest Shipping Agency Co., Ltd', 'ADD   : 25floor, Tower D, Sunshine Int’l Center,', 'TEL     : 0086 518-8232 7508
-MOB  : 0086 135 0513 1200', 'FAX    : 0086 518-8232 7576', 'MAIL  : yangsq@harvestshipping.cn', 'PIC     : Mr Yang Siqian', 'Lianyungang Harvest Shipping Agency Co., Ltd
+  ('SA012', '连云港', 'Lianyungang Harvest Shipping Agency Co., Ltd', '25floor, Tower D, Sunshine Int’l Center,', '0086 518-8232 7508 / 0086 135 0513 1200', '0086 518-8232 7576', 'yangsq@harvestshipping.cn', 'PIC : Mr Yang Siqian', 'Lianyungang Harvest Shipping Agency Co., Ltd
 连云港丰乐国际船舶代理有限公司
 PIC     : Mr Yang Siqian
 TEL     : 0086 518-8232 7508
@@ -231,55 +205,42 @@ MOB  : 0086 135 0513 1200
 MAIL  : yangsq@harvestshipping.cn
 ADD   : 25floor, Tower D, Sunshine Int’l Center,
 No.2 Haibin Road, Lianyungang, Jiangsu, China'),
-  ('SA013', '曹妃甸', 'Tangshan Hengye Shipping Agent Co., Ltd.', 'Jingtang office add: Room211,2nd Floor Office Building Bonded Logistics center,West Side,Haiping Road
-Caofeidian office add: Room 409, Zonghe Building, Tangshan Shiye Port Co., 18+,
-Huanghua office add: Eastern of Xindao Mansion,Canghai Road,Huanghua port, Bohai New Area, Cangzhou City,
-Tianjin office add: Room 702, No.10 building yihang international,international trade and shipping service area,', 'OFFICE TEL: 86-315-2911284 (24 HOURS)
-V.G. Manager: Mr. Changer Wu    MB:+86-18031582652
-Operator : Ms. Amy Zhao       MB:+86-18031582673
-Operator : Ms. Mia Li       MB: 86+18031582683
-Operator : Ms. Sara Liu        MB:+86-18031582664
-Tel: +86-315-2911284   Fax: +86-315-2911264', 'Tel: +86-315-2911284   Fax: +86-315-2911264', 'E-MAIL: shipping@hyie.com', 'V.G. Manager: Mr. Changer Wu    MB:+86-18031582652
-Operator : Ms. Amy Zhao       MB:+86-18031582673
-Operator : Ms. Mia Li       MB: 86+18031582683
-Operator : Ms. Sara Liu        MB:+86-18031582664', 'Tangshan Hengye Shipping Agent Co., Ltd.
+  ('SA013', '曹妃甸', 'Tangshan Hengye Shipping Agent Co., Ltd.', null, '86-315-2911284 (24 HOURS) / +86-315-2911284 Fax: +86-315-2911264', null, 'shipping@hyie.com', 'V.G. Manager: Mr. Changer Wu MB:+86-18031582652 / Operator : Ms. Amy Zhao MB:+86-18031582673 / Operator : Ms. Mia Li MB: 86+18031582683 / Operator : Ms. Sara Liu MB:+86-18031582664', 'Tangshan Hengye Shipping Agent Co., Ltd.
 E-MAIL: shipping@hyie.com
-OFFICE TEL: 86-315-2911284 (24 HOURS) 
+OFFICE TEL: 86-315-2911284 (24 HOURS)
 V.G. Manager: Mr. Changer Wu    MB:+86-18031582652
 Operator : Ms. Amy Zhao       MB:+86-18031582673
 Operator : Ms. Mia Li       MB: 86+18031582683
 Operator : Ms. Sara Liu        MB:+86-18031582664
 
 Jingtang office add: Room211,2nd Floor Office Building Bonded Logistics center,West Side,Haiping Road
-     (No. 10 Road),South Side,Gangxing Street(No. 7 Road),Seaport Development Zone,Tangshan City, Hebei Province, P.R.China 
+     (No. 10 Road),South Side,Gangxing Street(No. 7 Road),Seaport Development Zone,Tangshan City, Hebei Province, P.R.China
      ZIP CODE: 063611
 Caofeidian office add: Room 409, Zonghe Building, Tangshan Shiye Port Co., 18+,
      Caofeidian Industrial Area, Tangshan City, Hebei Province, P.R.China
      ZIP CODE: 063200
-Huanghua office add: Eastern of Xindao Mansion,Canghai Road,Huanghua port, Bohai New Area, Cangzhou City, 
-     Hebei Province, P.R.China 
+Huanghua office add: Eastern of Xindao Mansion,Canghai Road,Huanghua port, Bohai New Area, Cangzhou City,
+     Hebei Province, P.R.China
      ZIP CODE: 061113
 Tianjin office add: Room 702, No.10 building yihang international,international trade and shipping service area,
      Tianjin port free trade zone,Tianjin binhai new area P.R.China
      ZIP CODE: 300461
 Tel: +86-315-2911284   Fax: +86-315-2911264'),
-  ('SA014', '日照', 'China Ocean Shipping Agency Rizhao Co.,Ltd.', 'Add:106 Huanghai Road 1, Rizhao ,Shandong P.R.China(P.C:276826)', 'Tel:86-633-8331468', 'Fax:86-633-8331116;TLX:051-94076221 Via UK', 'EMail:cosarz@penavicorz.com;cosarz4047@163.com', null, 'China Ocean Shipping Agency Rizhao Co.,Ltd.
-Add:106 Huanghai Road 1, Rizhao ,Shandong P.R.China(P.C:276826)
+  ('SA014', '日照', 'China Ocean Shipping Agency Rizhao Co.,Ltd.', '106 Huanghai Road 1, Rizhao ,Shandong P.R.China(P.C:276826)', '86-633-8331468', '86-633-8331116;TLX:051-94076221 Via UK', 'cosarz@penavicorz.com / cosarz4047@163.com', null, 'China Ocean Shipping Agency Rizhao Co.,Ltd.
+Add:106 Huanghai Road 1, Rizhao ,Shandong P.R.China(P.C:276826)
 Liuyi:+86 15163376152
 Zhao wentao:+86 16606336683
 Tel:86-633-8331468
 Fax:86-633-8331116;TLX:051-94076221 Via UK
 EMail:cosarz@penavicorz.com;cosarz4047@163.com'),
-  ('SA015', '舟山港', 'COSCO SHIPPING AGENCY(ZHOUSHAN) CO., LTD', null, 'ATTN：AN CHAO                                                                                                                         TEL：+86-580-2184695', 'FAX： +86-580-2187129', 'EMAIL: csazs@coscoshipping.com(PUBLIC) an.chao8@coscoshipping.com (PERSONAL)', 'ATTN：AN CHAO                                                                                                                         TEL：+86-580-2184695', 'COSCO SHIPPING AGENCY(ZHOUSHAN) CO., LTD
+  ('SA015', '舟山港', 'COSCO SHIPPING AGENCY(ZHOUSHAN) CO., LTD', null, '+86-13868249158 +86-13758022924(24HRS)', '+86-580-2187129', 'csazs@coscoshipping.com / an.chao8@coscoshipping.com', 'ATTN：AN CHAO TEL：+86-580-2184695', 'COSCO SHIPPING AGENCY(ZHOUSHAN) CO., LTD
 10-F, JINYUE BULIDING, NO.620 DINGSHEN ROAD, LINCHENG NEW
 DISTRICT, ZHOUSHAN CITY, ZHEJIANG PROVINCE, China 316021
-ATTN：AN CHAO                                                                                                                         TEL：+86-580-2184695 
+ATTN：AN CHAO                                                                                                                         TEL：+86-580-2184695
 MOBILE：+86-13868249158  +86-13758022924(24HRS)
-FAX： +86-580-2187129 
+FAX： +86-580-2187129
 EMAIL: csazs@coscoshipping.com(PUBLIC) an.chao8@coscoshipping.com (PERSONAL)'),
-  ('SA016', '漳州港', 'China Ocean Shipping Agency Fujian Zhangzhou Branch', null, 'Tel:+86 596 6615081
-Mob:+86 138 5052 0830', 'Fax:+86 596 6858333', 'E-mail:  wu.huanxing@coscoshipping.com (New)', 'Mr.Jackie Wu(HuanXing Wu/吴焕兴）
-We chat:+86 138 5052 0830', 'China Ocean Shipping Agency Fujian Zhangzhou Branch
+  ('SA016', '漳州港', 'China Ocean Shipping Agency Fujian Zhangzhou Branch', null, '+86 596 6615081 / +86 138 5052 0830', '+86 596 6858333', 'wu.huanxing@coscoshipping.com / shipping.56zz@coscoshipping.com', 'Mr.Jackie Wu(HuanXing Wu/吴焕兴） / We chat:+86 138 5052 0830', 'China Ocean Shipping Agency Fujian Zhangzhou Branch
 China Ocean Shipping Agency Zhangzhou
 3/F Harbour Bldg,China Merchants Zhangzhou
 Development Zone, Fujian, 363122, P.R. China
@@ -288,8 +249,8 @@ Tel:+86 596 6615081
 Mob:+86 138 5052 0830
 We chat:+86 138 5052 0830
 Fax:+86 596 6858333
-E-mail:  wu.huanxing@coscoshipping.com (New)
-             shipping.56zz@coscoshipping.com(New)')
+E-mail:  wu.huanxing@coscoshipping.com (New)
+             shipping.56zz@coscoshipping.com(New)')
 )
 insert into public.shipping_agents (
   module_id, code, port_name, agency_name, address, tel, fax, email,

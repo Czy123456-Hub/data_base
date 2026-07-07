@@ -639,6 +639,23 @@ tbody tr.selected {
   align-items: flex-start;
 }
 
+.port-grid .detail-row-compact {
+  align-items: center;
+  min-width: 0;
+}
+
+.port-grid .detail-row-compact span:first-child {
+  flex: 0 0 auto;
+}
+
+.port-grid .detail-row-compact span:last-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  word-break: normal;
+}
+
 .reserved-tabs .tab {
   cursor: default;
 }

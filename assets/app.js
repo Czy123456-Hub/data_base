@@ -37,6 +37,7 @@ const state = {
   portBerths: [],
   shippingAgents: [],
   portsLoaded: false,
+  portLoadError: "",
   selectedPortId: null,
 };
 
@@ -251,6 +252,7 @@ async function applySession(session) {
   state.portBerths = [];
   state.shippingAgents = [];
   state.portsLoaded = false;
+  state.portLoadError = "";
   state.selectedPortId = null;
 
   if (!session) {
@@ -376,26 +378,40 @@ async function loadRecords() {
 async function loadPortData() {
   if (!state.supabase) return;
 
-  refs.portsTableBody.innerHTML = `<tr><td colspan="7">载入中...</td></tr>`;
+  state.portLoadError = "";
+  refs.portsTableBody.innerHTML = `<tr><td colspan="${portTableColumnCount()}">载入中...</td></tr>`;
 
-  const [berthsResult, agentsResult] = await Promise.all([
-    state.supabase.from("port_berths").select("*").order("code", { ascending: true }),
-    state.supabase.from("shipping_agents").select("*").order("code", { ascending: true }),
-  ]);
+  let berthsResult;
+  let agentsResult;
+  try {
+    [berthsResult, agentsResult] = await Promise.all([
+      state.supabase.from("port_berths").select("*").order("code", { ascending: true }),
+      state.supabase.from("shipping_agents").select("*").order("code", { ascending: true }),
+    ]);
+  } catch (error) {
+    berthsResult = { error };
+    agentsResult = { error: null };
+  }
 
   if (berthsResult.error || agentsResult.error) {
     const message = berthsResult.error?.message || agentsResult.error?.message || "港口模块载入失败";
-    refs.portsTableBody.innerHTML = `<tr><td colspan="7">${escapeHtml(message)}</td></tr>`;
-    refs.portModuleCount.textContent = "需运行 SQL";
+    state.portBerths = [];
+    state.shippingAgents = [];
     state.portsLoaded = false;
+    state.portLoadError = message;
+    populatePortFilter();
+    renderPortsModuleStatus();
+    renderPortsModule();
     return;
   }
 
   state.portBerths = berthsResult.data || [];
-  state.shippingAgents = agentsResult.data || [];
+  state.shippingAgents = (agentsResult.data || []).map(normalizeShippingAgent);
   state.portsLoaded = true;
+  state.portLoadError = "";
   populatePortFilter();
   renderPortsModuleStatus();
+  renderPortsModule();
 }
 
 async function loadHistory() {
@@ -439,6 +455,11 @@ function renderModuleStatus() {
 }
 
 function renderPortsModuleStatus() {
+  if (state.portLoadError) {
+    refs.portModuleCount.textContent = "需运行 SQL";
+    return;
+  }
+
   const count = state.portBerths.length + state.shippingAgents.length;
   refs.portModuleCount.textContent = count ? `${count} 条记录` : "需运行 SQL";
 }
@@ -540,6 +561,18 @@ function renderPortMetrics(rows) {
   refs.portMetricDwt.textContent = formatNumber(Math.max(0, ...rows.map((row) => Number(row.max_dwt_tons || 0))));
 }
 
+function portLoadMessage() {
+  if (!state.portLoadError) return "";
+  if (/does not exist|schema cache|relation/i.test(state.portLoadError)) {
+    return "港口模块数据表还没建好，请先运行港口模块 SQL";
+  }
+  return state.portLoadError;
+}
+
+function portTableColumnCount() {
+  return state.activePortView === "agents" ? 5 : 8;
+}
+
 function renderPortTable(rows) {
   if (state.activePortView === "agents") {
     refs.portsTableHead.innerHTML = `
@@ -549,6 +582,12 @@ function renderPortTable(rows) {
       <th>电话</th>
       <th>邮箱</th>
     `;
+
+    if (state.portLoadError) {
+      refs.portsTableBody.innerHTML = `<tr><td colspan="5">${escapeHtml(portLoadMessage())}</td></tr>`;
+      return;
+    }
+
     refs.portsTableBody.innerHTML = rows.length ? rows.map((record) => `
       <tr data-port-id="${record.id}" class="${record.id === state.selectedPortId ? "selected" : ""}">
         <td>${escapeHtml(record.code || "")}</td>
@@ -569,6 +608,12 @@ function renderPortTable(rows) {
       <th class="num">最大载重吨</th>
       <th>特殊要求</th>
     `;
+
+    if (state.portLoadError) {
+      refs.portsTableBody.innerHTML = `<tr><td colspan="8">${escapeHtml(portLoadMessage())}</td></tr>`;
+      return;
+    }
+
     refs.portsTableBody.innerHTML = rows.length ? rows.map((record) => `
       <tr data-port-id="${record.id}" class="${record.id === state.selectedPortId ? "selected" : ""}">
         <td>${escapeHtml(record.code || "")}</td>
@@ -605,19 +650,22 @@ function renderPortDetail() {
   refs.portRecordDetail.classList.remove("hidden");
 
   if (state.activePortView === "agents") {
+    const agent = normalizeShippingAgent(record);
     refs.portRecordDetail.innerHTML = `
       <header>
-        <h2>${escapeHtml(record.agency_name || record.port_name)}</h2>
-        <span class="badge">${escapeHtml(record.port_name || "")}</span>
+        <h2>${escapeHtml(agent.agency_name || agent.port_name)}</h2>
+        <span class="badge">${escapeHtml(agent.port_name || "")}</span>
       </header>
       <div class="detail-list">
-        ${detailRow("编号", record.code || "-")}
-        ${detailRow("港口", record.port_name || "-")}
-        ${detailRow("电话", record.tel || "-")}
-        ${detailRow("传真", record.fax || "-")}
-        ${detailRow("邮箱", record.email || "-")}
-        ${detailRow("联系人", record.contact_persons || "-")}
-        ${detailRow("来源", record.source_document || "-")}
+        ${detailRowCompact("编号", agent.code || "-")}
+        ${detailRowCompact("港口", agent.port_name || "-")}
+        ${detailRowCompact("船代公司", agent.agency_name || "-")}
+        ${detailRowCompact("地址", agent.address || "-")}
+        ${detailRowCompact("电话", agent.tel || "-")}
+        ${detailRowCompact("传真", agent.fax || "-")}
+        ${detailRowCompact("邮箱", agent.email || "-")}
+        ${detailRowCompact("联系人", agent.contact_persons || "-")}
+        ${detailRowCompact("来源", agent.source_document || "-")}
       </div>
     `;
     return;
@@ -888,18 +936,21 @@ function exportPortCsv(records) {
     ? ["编号", "港口", "船代公司", "地址", "电话", "传真", "邮箱", "联系人", "原始文本", "来源"]
     : ["编号", "所在地", "港口", "码头", "泊位", "吃水(米)", "最大载重吨", "夏天海水密度", "特殊要求", "来源"];
   const rows = state.activePortView === "agents"
-    ? records.map((record) => [
-      record.code,
-      record.port_name,
-      record.agency_name,
-      record.address,
-      record.tel,
-      record.fax,
-      record.email,
-      record.contact_persons,
-      record.raw_text,
-      record.source_document,
-    ])
+    ? records.map((record) => {
+      const agent = normalizeShippingAgent(record);
+      return [
+        agent.code,
+        agent.port_name,
+        agent.agency_name,
+        agent.address,
+        agent.tel,
+        agent.fax,
+        agent.email,
+        agent.contact_persons,
+        agent.raw_text,
+        agent.source_document,
+      ];
+    })
     : records.map((record) => [
       record.code,
       record.location,
@@ -953,6 +1004,98 @@ function detailRow(label, value) {
   return `<div class="detail-row"><span>${escapeHtml(label)}</span><span>${escapeHtml(value)}</span></div>`;
 }
 
+function detailRowCompact(label, value) {
+  const text = singleLine(value) || "-";
+  return `<div class="detail-row detail-row-compact"><span>${escapeHtml(label)}</span><span title="${escapeHtml(text)}">${escapeHtml(text)}</span></div>`;
+}
+
+function normalizeShippingAgent(record) {
+  const parsed = parseShippingAgentText(record.raw_text);
+  return {
+    ...record,
+    address: singleLine(parsed.address || record.address),
+    tel: singleLine(parsed.tel || cleanupAgentTel(record.tel)),
+    fax: singleLine(parsed.fax || cleanupAgentFax(record.fax)),
+    email: singleLine(parsed.email || cleanupAgentEmail(record.email)),
+    contact_persons: singleLine(parsed.contact_persons || cleanupAgentContacts(record.contact_persons)),
+  };
+}
+
+function parseShippingAgentText(rawText) {
+  const lines = contentLines(rawText);
+  const emailMatches = lines
+    .flatMap((line) => line.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi) || []);
+
+  return {
+    address: uniqueLines(lines.filter(isAddressLine).map(cleanLabel)).join(" / "),
+    tel: uniqueLines(lines.filter(isTelephoneLine).map(cleanLabel)).join(" / "),
+    fax: uniqueLines(lines.filter(isFaxLine).map(cleanLabel)).join(" / "),
+    email: uniqueLines(emailMatches).join(" / "),
+    contact_persons: uniqueLines(lines.filter(isContactLine).map(cleanLabel)).join(" / "),
+  };
+}
+
+function cleanupAgentTel(value) {
+  const lines = contentLines(value);
+  const cleaned = uniqueLines(lines.filter(isTelephoneLine).map(cleanLabel)).join(" / ");
+  return cleaned || singleLine(value);
+}
+
+function cleanupAgentFax(value) {
+  const lines = contentLines(value);
+  const cleaned = uniqueLines(lines.filter(isFaxLine).map(cleanLabel)).join(" / ");
+  return cleaned || singleLine(value);
+}
+
+function cleanupAgentEmail(value) {
+  const emails = contentLines(value)
+    .flatMap((line) => line.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi) || []);
+  return uniqueLines(emails).join(" / ") || singleLine(value);
+}
+
+function cleanupAgentContacts(value) {
+  const lines = contentLines(value);
+  const cleaned = uniqueLines(lines.filter(isContactLine).map(cleanLabel)).join(" / ");
+  return cleaned || singleLine(value);
+}
+
+function contentLines(value) {
+  return String(value || "")
+    .split(/\r?\n/)
+    .map((line) => singleLine(line))
+    .filter(Boolean);
+}
+
+function uniqueLines(lines) {
+  return [...new Set(lines.map((line) => singleLine(line)).filter(Boolean))];
+}
+
+function isAddressLine(line) {
+  return /^(add|address)\b\s*[:：]?/i.test(line);
+}
+
+function isTelephoneLine(line) {
+  if (isContactLine(line) || isFaxLine(line)) return false;
+  return /^(tel|telephone|tele\s*no|office\s*tel|office\s*phone|phone|mobile|mob|cell\s*phone|direct\s*line|mb)\b\s*[:：]?/i.test(line);
+}
+
+function isFaxLine(line) {
+  return /^(fax|facsimile|tel\s*\/\s*fax|tel\s*&\s*fax)\b\s*[:：]?/i.test(line);
+}
+
+function isContactLine(line) {
+  return /\b(pic|attn|contact|operator|manager|mr\.?|ms\.?|mrs\.?|wechat|we\s*chat|op)\b/i.test(line);
+}
+
+function cleanLabel(line) {
+  return singleLine(line)
+    .replace(/^(add|address)\b\s*[:：]?/i, "")
+    .replace(/^(fax|facsimile|tel\s*\/\s*fax|tel\s*&\s*fax)\b\s*[:：]?/i, "")
+    .replace(/^(tel|telephone|tele\s*no|office\s*tel|office\s*phone|phone|mobile|mob|cell\s*phone|direct\s*line|mb)\b\s*[:：]?/i, "")
+    .replace(/^(e-?mail|email)\b\s*[:：]?/i, "")
+    .trim();
+}
+
 function sum(records, key) {
   return records.reduce((total, record) => total + Number(record[key] || 0), 0);
 }
@@ -992,8 +1135,12 @@ function formatDate(value) {
   return new Intl.DateTimeFormat("zh-CN", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
 }
 
+function singleLine(value) {
+  return String(value || "").replace(/\s+/g, " ").trim();
+}
+
 function shortText(value, limit) {
-  const text = String(value || "").replace(/\s+/g, " ").trim();
+  const text = singleLine(value);
   if (text.length <= limit) return text;
   return `${text.slice(0, limit)}...`;
 }
