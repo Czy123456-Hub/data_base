@@ -39,6 +39,8 @@ database200713-d7gpx3anl9853af10
 
 页面首次登录后会自动写入 `profiles` 和主模块配置；业务 seed 数据仍需要从现有 Supabase SQL / Excel 转成 CloudBase JSON 后导入。
 
+CloudBase 导入文件已生成在 `cloudbase/import/`，具体导入顺序见 `cloudbase/README.md`。
+
 ## Supabase 部署
 
 如果你已经把 Supabase 连接到这个 GitHub 仓库，确认它会执行 `supabase/migrations` 下的 SQL。

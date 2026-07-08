@@ -338,7 +338,7 @@ function createCloudBaseBackend({ auth, db }) {
     },
     async listEnterprises(moduleId) {
       return listCloudBaseRecords(db, "enterprises", {
-        where: moduleId ? { module_id: moduleId } : null,
+        where: { module_slug: MODULE_SLUG },
         orderBy: ["code", "asc"],
       });
     },
@@ -361,6 +361,7 @@ function createCloudBaseBackend({ auth, db }) {
         const before = await getCloudBaseRecord(db, "enterprises", id);
         const next = {
           ...payload,
+          module_slug: MODULE_SLUG,
           updated_by: user.id,
           updated_at: timestamp,
         };
@@ -372,6 +373,7 @@ function createCloudBaseBackend({ auth, db }) {
 
       const created = await addCloudBaseRecord(db, "enterprises", {
         ...payload,
+        module_slug: MODULE_SLUG,
         created_by: user.id,
         updated_by: user.id,
         created_at: timestamp,
