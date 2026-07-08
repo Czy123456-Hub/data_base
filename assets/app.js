@@ -25,6 +25,8 @@ const MODULES = {
 };
 
 const state = {
+  backend: null,
+  provider: "",
   supabase: null,
   session: null,
   profile: null,
@@ -105,7 +107,7 @@ init();
 
 async function init() {
   wireUi();
-  const config = window.SUPABASE_CONFIG || {};
+  const config = getRuntimeConfig();
   if (!isConfigured(config)) {
     refs.setupPanel.classList.remove("hidden");
     refs.authPanel.classList.add("hidden");
@@ -113,23 +115,441 @@ async function init() {
     return;
   }
 
-  const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm");
-  state.supabase = createClient(config.url, config.anonKey);
+  try {
+    state.provider = config.provider;
+    state.backend = await createBackend(config);
+    state.supabase = state.backend.supabase || null;
 
-  const { data } = await state.supabase.auth.getSession();
-  await applySession(data.session);
-  state.supabase.auth.onAuthStateChange((_event, session) => {
-    applySession(session);
-  });
+    const session = await state.backend.getSession();
+    await applySession(session);
+    state.backend.onAuthStateChange((nextSession) => {
+      applySession(nextSession);
+    });
+  } catch (error) {
+    refs.setupPanel.classList.remove("hidden");
+    refs.setupPanel.querySelector("h2").textContent = "后端初始化失败";
+    refs.setupPanel.querySelector("p").textContent = formatError(error);
+  }
 }
 
 function isConfigured(config) {
-  return Boolean(
-    config.url
-      && config.anonKey
-      && !config.url.includes("YOUR-PROJECT-REF")
-      && !config.anonKey.includes("YOUR_PUBLIC"),
-  );
+  if (config.provider === "cloudbase") {
+    const envId = config.cloudbase?.envId || config.cloudbase?.env;
+    return Boolean(envId && !envId.includes("YOUR_CLOUDBASE_ENV_ID"));
+  }
+
+  if (config.provider === "supabase") {
+    const supabase = config.supabase || {};
+    return Boolean(
+      supabase.url
+        && supabase.anonKey
+        && !supabase.url.includes("YOUR-PROJECT-REF")
+        && !supabase.anonKey.includes("YOUR_PUBLIC"),
+    );
+  }
+
+  return false;
+}
+
+function getRuntimeConfig() {
+  if (window.APP_CONFIG?.provider) return window.APP_CONFIG;
+
+  if (window.CLOUDBASE_CONFIG?.envId || window.CLOUDBASE_CONFIG?.env) {
+    return {
+      provider: "cloudbase",
+      cloudbase: window.CLOUDBASE_CONFIG,
+    };
+  }
+
+  if (window.SUPABASE_CONFIG?.url) {
+    return {
+      provider: "supabase",
+      supabase: window.SUPABASE_CONFIG,
+    };
+  }
+
+  return {};
+}
+
+async function createBackend(config) {
+  if (config.provider === "cloudbase") {
+    const cloudbaseModule = await import("https://cdn.jsdelivr.net/npm/@cloudbase/js-sdk@3/+esm");
+    const cloudbase = cloudbaseModule.default || cloudbaseModule;
+    const cloudConfig = config.cloudbase || {};
+    const app = cloudbase.init({
+      env: cloudConfig.envId || cloudConfig.env,
+      region: cloudConfig.region || "ap-shanghai",
+    });
+    const auth = app.auth({ persistence: "local" });
+    const db = app.database();
+    return createCloudBaseBackend({ auth, db });
+  }
+
+  const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm");
+  const supabase = createClient(config.supabase.url, config.supabase.anonKey);
+  return createSupabaseBackend(supabase);
+}
+
+function createSupabaseBackend(supabase) {
+  return {
+    provider: "supabase",
+    supabase,
+    async getSession() {
+      const { data } = await supabase.auth.getSession();
+      return data.session;
+    },
+    onAuthStateChange(callback) {
+      supabase.auth.onAuthStateChange((_event, session) => callback(session));
+    },
+    async signIn(email, password) {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+    },
+    async signUp(email, password) {
+      const { error } = await supabase.auth.signUp({ email, password });
+      if (error) throw error;
+    },
+    async signOut() {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+    },
+    async ensureProfile(user) {
+      let { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (!data && !error) {
+        const insert = await supabase
+          .from("profiles")
+          .insert({ id: user.id, email: user.email, role: "editor" })
+          .select("*")
+          .single();
+        data = insert.data;
+        error = insert.error;
+      }
+
+      if (error) throw error;
+      return data || { email: user.email, role: "editor" };
+    },
+    async loadModule(slug) {
+      const { data, error } = await supabase
+        .from("database_modules")
+        .select("*")
+        .eq("slug", slug)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    async listEnterprises(moduleId) {
+      let query = supabase
+        .from("enterprises")
+        .select("*")
+        .order("code", { ascending: true });
+      if (moduleId) query = query.eq("module_id", moduleId);
+      const { data, error } = await query;
+      if (error) throw error;
+      return data || [];
+    },
+    async listPortBerths() {
+      const { data, error } = await supabase.from("port_berths").select("*").order("code", { ascending: true });
+      if (error) throw error;
+      return data || [];
+    },
+    async listShippingAgents() {
+      const { data, error } = await supabase.from("shipping_agents").select("*").order("code", { ascending: true });
+      if (error) throw error;
+      return data || [];
+    },
+    async listHistory() {
+      const { data, error } = await supabase
+        .from("record_audit_logs")
+        .select("*")
+        .eq("table_name", "enterprises")
+        .order("created_at", { ascending: false })
+        .limit(40);
+      if (error) throw error;
+      return data || [];
+    },
+    async saveEnterprise(payload, id, user) {
+      const query = id
+        ? supabase.from("enterprises").update(payload).eq("id", id).select("*").single()
+        : supabase.from("enterprises").insert({ ...payload, created_by: user.id }).select("*").single();
+      const { data, error } = await query;
+      if (error) throw error;
+      return data;
+    },
+    async deleteEnterprise(id) {
+      const { error } = await supabase.from("enterprises").delete().eq("id", id);
+      if (error) throw error;
+    },
+    async undoEnterpriseChange(changeId) {
+      const { error } = await supabase.rpc("restore_enterprise_change", { change_id: changeId });
+      if (error) throw error;
+    },
+  };
+}
+
+function createCloudBaseBackend({ auth, db }) {
+  return {
+    provider: "cloudbase",
+    async getSession() {
+      const loginState = await getCloudBaseLoginState(auth);
+      return normalizeCloudBaseSession(loginState);
+    },
+    onAuthStateChange(callback) {
+      if (typeof auth.onLoginStateChanged === "function") {
+        auth.onLoginStateChanged((loginState) => callback(normalizeCloudBaseSession(loginState)));
+      }
+    },
+    async signIn(email, password) {
+      await callCredentialAuthMethod(auth, ["signInWithEmailAndPassword", "signInWithPassword"], email, password);
+    },
+    async signUp(email, password) {
+      await callCredentialAuthMethod(auth, ["signUpWithEmailAndPassword", "signUpWithPassword"], email, password);
+    },
+    async signOut() {
+      await callFirstAuthMethod(auth, ["signOut", "logout"]);
+    },
+    async ensureProfile(user) {
+      const existing = await firstCloudBaseRecord(db, "profiles", { user_id: user.id });
+      if (existing) return existing;
+      return addCloudBaseRecord(db, "profiles", {
+        user_id: user.id,
+        email: user.email,
+        role: "editor",
+        created_at: nowIso(),
+        updated_at: nowIso(),
+      });
+    },
+    async loadModule(slug) {
+      let module = await firstCloudBaseRecord(db, "database_modules", { slug });
+      if (module) return module;
+      module = await addCloudBaseRecord(db, "database_modules", {
+        slug,
+        name: MODULES.capacity.title,
+        description: "备案产能、自动进口许可证额度和发放比例。",
+        is_editable: true,
+        created_at: nowIso(),
+        updated_at: nowIso(),
+      });
+      return module;
+    },
+    async listEnterprises(moduleId) {
+      return listCloudBaseRecords(db, "enterprises", {
+        where: moduleId ? { module_id: moduleId } : null,
+        orderBy: ["code", "asc"],
+      });
+    },
+    async listPortBerths() {
+      return listCloudBaseRecords(db, "port_berths", { orderBy: ["code", "asc"] });
+    },
+    async listShippingAgents() {
+      return listCloudBaseRecords(db, "shipping_agents", { orderBy: ["code", "asc"] });
+    },
+    async listHistory() {
+      return listCloudBaseRecords(db, "record_audit_logs", {
+        where: { table_name: "enterprises" },
+        orderBy: ["created_at", "desc"],
+        limit: 40,
+      });
+    },
+    async saveEnterprise(payload, id, user) {
+      const timestamp = nowIso();
+      if (id) {
+        const before = await getCloudBaseRecord(db, "enterprises", id);
+        const next = {
+          ...payload,
+          updated_by: user.id,
+          updated_at: timestamp,
+        };
+        await updateCloudBaseRecord(db, "enterprises", id, next);
+        const after = { ...before, ...next, id };
+        await writeCloudBaseAudit(db, "UPDATE", before, after, user);
+        return after;
+      }
+
+      const created = await addCloudBaseRecord(db, "enterprises", {
+        ...payload,
+        created_by: user.id,
+        updated_by: user.id,
+        created_at: timestamp,
+        updated_at: timestamp,
+      });
+      await writeCloudBaseAudit(db, "INSERT", null, created, user);
+      return created;
+    },
+    async deleteEnterprise(id, user) {
+      const before = await getCloudBaseRecord(db, "enterprises", id);
+      await removeCloudBaseRecord(db, "enterprises", id);
+      await writeCloudBaseAudit(db, "DELETE", before, null, user);
+    },
+    async undoEnterpriseChange(changeId, user) {
+      const change = await getCloudBaseRecord(db, "record_audit_logs", changeId);
+      if (!change || change.reverted_at) return;
+      if (change.action === "INSERT" && change.new_data?.id) {
+        await removeCloudBaseRecord(db, "enterprises", change.new_data.id);
+      } else if (change.action === "UPDATE" && change.old_data?.id) {
+        const restored = { ...change.old_data, updated_by: user.id, updated_at: nowIso() };
+        await updateCloudBaseRecord(db, "enterprises", change.old_data.id, toCloudBaseData(restored));
+      } else if (change.action === "DELETE" && change.old_data) {
+        await addCloudBaseRecord(db, "enterprises", toCloudBaseData(change.old_data));
+      }
+      await updateCloudBaseRecord(db, "record_audit_logs", changeId, {
+        reverted_at: nowIso(),
+        reverted_by: user.id,
+      });
+    },
+  };
+}
+
+async function getCloudBaseLoginState(auth) {
+  if (typeof auth.hasLoginState === "function") return auth.hasLoginState();
+  if (typeof auth.getCurrentUser === "function") return auth.getCurrentUser();
+  if (typeof auth.currentUser === "function") return auth.currentUser();
+  return null;
+}
+
+function normalizeCloudBaseSession(loginState) {
+  const user = loginState?.user || loginState?.userinfo || loginState;
+  if (!user) return null;
+  const id = user.uid || user.userId || user.openId || user.email || user.username || "cloudbase-user";
+  const email = user.email || user.loginName || user.username || "";
+  return {
+    user: {
+      id,
+      email,
+    },
+    raw: loginState,
+  };
+}
+
+async function callFirstAuthMethod(target, methodNames, ...args) {
+  const methodName = methodNames.find((name) => typeof target[name] === "function");
+  if (!methodName) {
+    throw new Error(`CloudBase 当前 SDK 不支持 ${methodNames.join(" / ")}，请检查身份认证方式是否开启。`);
+  }
+  return target[methodName](...args);
+}
+
+async function callCredentialAuthMethod(target, methodNames, email, password) {
+  const methodName = methodNames.find((name) => typeof target[name] === "function");
+  if (!methodName) {
+    throw new Error(`CloudBase 当前 SDK 不支持 ${methodNames.join(" / ")}，请检查邮箱/密码登录是否开启。`);
+  }
+  try {
+    return await target[methodName](email, password);
+  } catch (error) {
+    if (!/param|argument|参数|invalid/i.test(formatError(error))) throw error;
+    return target[methodName]({ email, password });
+  }
+}
+
+async function firstCloudBaseRecord(db, collectionName, where) {
+  const rows = await listCloudBaseRecords(db, collectionName, { where, limit: 1 });
+  return rows[0] || null;
+}
+
+async function listCloudBaseRecords(db, collectionName, options = {}) {
+  const pageSize = Math.min(options.limit || 100, 100);
+  const maxCount = options.limit || 1000;
+  let query = db.collection(collectionName);
+  if (options.where) query = query.where(options.where);
+  if (options.orderBy) query = query.orderBy(options.orderBy[0], options.orderBy[1]);
+
+  const rows = [];
+  for (let offset = 0; offset < maxCount; offset += pageSize) {
+    let pageQuery = query.limit(pageSize);
+    if (typeof pageQuery.skip === "function") {
+      pageQuery = pageQuery.skip(offset);
+    }
+    const result = await pageQuery.get();
+    const data = normalizeCloudBaseData(result);
+    rows.push(...data.map(normalizeCloudBaseRecord));
+    if (data.length < pageSize || rows.length >= maxCount) break;
+  }
+  return rows.slice(0, maxCount);
+}
+
+async function getCloudBaseRecord(db, collectionName, id) {
+  const result = await db.collection(collectionName).doc(id).get();
+  const rows = normalizeCloudBaseData(result).map(normalizeCloudBaseRecord);
+  return rows[0] || normalizeCloudBaseRecord(result.data || {});
+}
+
+async function addCloudBaseRecord(db, collectionName, payload) {
+  const data = toCloudBaseData(payload);
+  const collection = db.collection(collectionName);
+  let result;
+  try {
+    result = await collection.add({ data });
+  } catch (error) {
+    result = await collection.add(data);
+  }
+  const id = result?.id || result?._id || data._id;
+  return normalizeCloudBaseRecord({ ...data, _id: id });
+}
+
+async function updateCloudBaseRecord(db, collectionName, id, payload) {
+  const { _id, ...data } = toCloudBaseData(payload);
+  const doc = db.collection(collectionName).doc(id);
+  try {
+    await doc.update({ data });
+  } catch (error) {
+    await doc.update(data);
+  }
+}
+
+async function removeCloudBaseRecord(db, collectionName, id) {
+  try {
+    await db.collection(collectionName).doc(id).remove();
+  } catch (error) {
+    if (!/not exist|不存在|not found/i.test(formatError(error))) throw error;
+  }
+}
+
+async function writeCloudBaseAudit(db, action, oldData, newData, user) {
+  await addCloudBaseRecord(db, "record_audit_logs", {
+    table_name: "enterprises",
+    record_id: newData?.id || oldData?.id || null,
+    action,
+    old_data: oldData ? toAuditData(oldData) : null,
+    new_data: newData ? toAuditData(newData) : null,
+    changed_by: user.id,
+    created_at: nowIso(),
+    reverted_at: null,
+  });
+}
+
+function normalizeCloudBaseData(result) {
+  if (Array.isArray(result?.data)) return result.data;
+  if (result?.data && typeof result.data === "object") return [result.data];
+  return [];
+}
+
+function normalizeCloudBaseRecord(record) {
+  const id = record.id || record._id;
+  return {
+    ...record,
+    id,
+  };
+}
+
+function toCloudBaseData(record) {
+  const { id, ...data } = record || {};
+  if (id && !data._id) data._id = id;
+  return data;
+}
+
+function toAuditData(record) {
+  const data = { ...record };
+  if (!data.id && data._id) data.id = data._id;
+  return data;
+}
+
+function nowIso() {
+  return new Date().toISOString();
 }
 
 function wireUi() {
@@ -268,7 +688,7 @@ async function applySession(session) {
   refs.authPanel.classList.add("hidden");
   refs.appShell.classList.remove("hidden");
   refs.signOutBtn.classList.remove("hidden");
-  refs.userEmail.textContent = session.user.email || "";
+  refs.userEmail.textContent = session.user.email || session.user.id || "";
   await ensureProfile();
   await loadModule();
   await loadRecords();
@@ -286,66 +706,41 @@ async function handleAuth(event, mode) {
   const formData = new FormData(refs.authForm);
   const email = String(formData.get("email") || "").trim();
   const password = String(formData.get("password") || "");
-  const action = mode === "signup"
-    ? state.supabase.auth.signUp({ email, password })
-    : state.supabase.auth.signInWithPassword({ email, password });
-  const { error } = await action;
-
-  if (error) {
-    showMessage(refs.authMessage, error.message, true);
+  try {
+    if (mode === "signup") {
+      await state.backend.signUp(email, password);
+    } else {
+      await state.backend.signIn(email, password);
+    }
+    const session = await state.backend.getSession();
+    await applySession(session);
+  } catch (error) {
+    showMessage(refs.authMessage, formatError(error), true);
     return;
   }
 
-  showMessage(refs.authMessage, mode === "signup" ? "注册已提交，请按 Supabase 邮件设置完成确认。" : "已登录。");
+  showMessage(refs.authMessage, mode === "signup" ? "注册已提交，如开启邮箱验证请按邮件确认。" : "已登录。");
 }
 
 async function signOut() {
-  await state.supabase.auth.signOut();
+  await state.backend.signOut();
+  await applySession(null);
 }
 
 async function ensureProfile() {
   const user = state.session.user;
-  let { data, error } = await state.supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  if (error) {
-    showMessage(refs.recordMessage, error.message, true);
-  }
-
-  if (!data) {
-    const insert = await state.supabase
-      .from("profiles")
-      .insert({ id: user.id, email: user.email, role: "editor" })
-      .select("*")
-      .single();
-    data = insert.data;
-    error = insert.error;
-  }
-
-  if (error) {
-    showMessage(refs.recordMessage, error.message, true);
-  }
-
-  state.profile = data || { email: user.email, role: "editor" };
+  state.profile = await state.backend.ensureProfile(user);
 }
 
 async function loadModule() {
-  const { data, error } = await state.supabase
-    .from("database_modules")
-    .select("*")
-    .eq("slug", MODULE_SLUG)
-    .maybeSingle();
-
-  if (error) {
-    showMessage(refs.recordMessage, error.message, true);
-    return;
+  try {
+    state.module = await state.backend.loadModule(MODULE_SLUG);
+  } catch (error) {
+    showMessage(refs.recordMessage, formatError(error), true);
+    state.module = null;
   }
 
-  state.module = data;
-  const name = data?.name || "备案产能和自动进口证发放比例";
+  const name = state.module?.name || "备案产能和自动进口证发放比例";
   if (state.activeModule === "capacity") {
     refs.moduleTitle.textContent = name;
   }
@@ -355,28 +750,20 @@ async function loadModule() {
 async function loadRecords() {
   refs.recordsBody.innerHTML = `<tr><td colspan="9">载入中...</td></tr>`;
 
-  let query = state.supabase
-    .from("enterprises")
-    .select("*")
-    .order("code", { ascending: true });
-
-  if (state.module?.id) {
-    query = query.eq("module_id", state.module.id);
-  }
-
-  const { data, error } = await query;
-  if (error) {
-    refs.recordsBody.innerHTML = `<tr><td colspan="9">${escapeHtml(error.message)}</td></tr>`;
+  try {
+    state.records = await state.backend.listEnterprises(state.module?.id);
+  } catch (error) {
+    refs.recordsBody.innerHTML = `<tr><td colspan="9">${escapeHtml(formatError(error))}</td></tr>`;
+    state.records = [];
     return;
   }
 
-  state.records = data || [];
   renderModuleStatus();
   populateRegionFilter();
 }
 
 async function loadPortData() {
-  if (!state.supabase) return;
+  if (!state.backend) return;
 
   state.portLoadError = "";
   refs.portsTableBody.innerHTML = `<tr><td colspan="${portTableColumnCount()}">载入中...</td></tr>`;
@@ -385,8 +772,8 @@ async function loadPortData() {
   let agentsResult;
   try {
     [berthsResult, agentsResult] = await Promise.all([
-      state.supabase.from("port_berths").select("*").order("code", { ascending: true }),
-      state.supabase.from("shipping_agents").select("*").order("code", { ascending: true }),
+      state.backend.listPortBerths(),
+      state.backend.listShippingAgents(),
     ]);
   } catch (error) {
     berthsResult = { error };
@@ -405,8 +792,8 @@ async function loadPortData() {
     return;
   }
 
-  state.portBerths = berthsResult.data || [];
-  state.shippingAgents = (agentsResult.data || []).map(normalizeShippingAgent);
+  state.portBerths = berthsResult || [];
+  state.shippingAgents = (agentsResult || []).map(normalizeShippingAgent);
   state.portsLoaded = true;
   state.portLoadError = "";
   populatePortFilter();
@@ -419,26 +806,21 @@ async function loadHistory() {
   refs.historyMessage.textContent = "";
   refs.historyMessage.classList.remove("error");
 
-  const { data, error } = await state.supabase
-    .from("record_audit_logs")
-    .select("*")
-    .eq("table_name", "enterprises")
-    .order("created_at", { ascending: false })
-    .limit(40);
-
-  if (error) {
-    refs.historyBody.innerHTML = `<tr><td colspan="6">${escapeHtml(error.message)}</td></tr>`;
+  try {
+    state.history = await state.backend.listHistory();
+  } catch (error) {
+    refs.historyBody.innerHTML = `<tr><td colspan="6">${escapeHtml(formatError(error))}</td></tr>`;
+    state.history = [];
     return;
   }
 
-  state.history = data || [];
   renderHistory();
 }
 
 function renderProfile() {
   refs.roleBadge.textContent = "可编辑";
   refs.roleBadge.classList.remove("muted");
-  refs.profileEmail.textContent = state.profile?.email || state.session?.user?.email || "-";
+  refs.profileEmail.textContent = state.profile?.email || state.session?.user?.email || state.session?.user?.id || "-";
   refs.profileRole.textContent = "可查阅、编辑、删除、撤回";
   renderModuleStatus();
 
@@ -858,13 +1240,11 @@ async function saveRecord(event) {
     updated_by: state.session.user.id,
   };
 
-  const query = id
-    ? state.supabase.from("enterprises").update(payload).eq("id", id).select("*").single()
-    : state.supabase.from("enterprises").insert({ ...payload, created_by: state.session.user.id }).select("*").single();
-  const { data, error } = await query;
-
-  if (error) {
-    showMessage(refs.recordMessage, error.message, true);
+  let data;
+  try {
+    data = await state.backend.saveEnterprise(payload, id, state.session.user);
+  } catch (error) {
+    showMessage(refs.recordMessage, formatError(error), true);
     return;
   }
 
@@ -880,9 +1260,10 @@ async function deleteRecord() {
   const confirmed = window.confirm("确认删除当前记录？可以在操作历史中撤回。");
   if (!confirmed) return;
 
-  const { error } = await state.supabase.from("enterprises").delete().eq("id", id);
-  if (error) {
-    showMessage(refs.recordMessage, error.message, true);
+  try {
+    await state.backend.deleteEnterprise(id, state.session.user);
+  } catch (error) {
+    showMessage(refs.recordMessage, formatError(error), true);
     return;
   }
 
@@ -897,9 +1278,10 @@ async function undoChange(changeId) {
   const confirmed = window.confirm("确认撤回这次操作？");
   if (!confirmed) return;
 
-  const { error } = await state.supabase.rpc("restore_enterprise_change", { change_id: changeId });
-  if (error) {
-    showMessage(refs.historyMessage, error.message, true);
+  try {
+    await state.backend.undoEnterpriseChange(changeId, state.session.user);
+  } catch (error) {
+    showMessage(refs.historyMessage, formatError(error), true);
     return;
   }
 
@@ -1124,6 +1506,17 @@ function formatPercentValue(value) {
 function showMessage(element, message, isError = false) {
   element.textContent = message;
   element.classList.toggle("error", isError);
+}
+
+function formatError(error) {
+  const message = error?.message || error?.msg || error?.errMsg || String(error || "未知错误");
+  if (/collection|not exist|不存在|not found/i.test(message)) {
+    return `${message}。请确认 CloudBase 数据库集合已创建：database_modules、profiles、enterprises、port_berths、shipping_agents、record_audit_logs。`;
+  }
+  if (/auth|login|permission|unauthorized|forbidden|权限/i.test(message)) {
+    return `${message}。请确认 CloudBase 身份认证和数据库安全规则已开启。`;
+  }
+  return message;
 }
 
 function formatNumber(value) {

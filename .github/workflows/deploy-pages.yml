@@ -27,19 +27,40 @@ jobs:
 
       - name: Create runtime config
         env:
+          APP_PROVIDER_RAW: ${{ secrets.APP_PROVIDER }}
+          CLOUDBASE_ENV_ID_RAW: ${{ secrets.CLOUDBASE_ENV_ID }}
+          CLOUDBASE_REGION_RAW: ${{ secrets.CLOUDBASE_REGION }}
           SUPABASE_URL_RAW: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY_RAW: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
+          APP_PROVIDER="${APP_PROVIDER_RAW:-cloudbase}"
+          CLOUDBASE_ENV_ID="${CLOUDBASE_ENV_ID_RAW:-database200713-d7gpx3anl9853af10}"
+          CLOUDBASE_REGION="${CLOUDBASE_REGION_RAW:-ap-shanghai}"
           SUPABASE_URL="${SUPABASE_URL_RAW#*=}"
           SUPABASE_ANON_KEY="${SUPABASE_ANON_KEY_RAW#*=}"
+          APP_PROVIDER="$(printf '%s' "$APP_PROVIDER" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+          CLOUDBASE_ENV_ID="$(printf '%s' "$CLOUDBASE_ENV_ID" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+          CLOUDBASE_REGION="$(printf '%s' "$CLOUDBASE_REGION" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
           SUPABASE_URL="$(printf '%s' "$SUPABASE_URL" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
           SUPABASE_ANON_KEY="$(printf '%s' "$SUPABASE_ANON_KEY" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
           cat > config.js <<'EOF'
-          window.SUPABASE_CONFIG = {
-            url: "__SUPABASE_URL__",
-            anonKey: "__SUPABASE_ANON_KEY__"
+          window.APP_CONFIG = {
+            provider: "__APP_PROVIDER__",
+            cloudbase: {
+              envId: "__CLOUDBASE_ENV_ID__",
+              region: "__CLOUDBASE_REGION__"
+            },
+            supabase: {
+              url: "__SUPABASE_URL__",
+              anonKey: "__SUPABASE_ANON_KEY__"
+            }
           };
+          window.CLOUDBASE_CONFIG = window.APP_CONFIG.cloudbase;
+          window.SUPABASE_CONFIG = window.APP_CONFIG.supabase;
           EOF
+          sed -i "s#__APP_PROVIDER__#$APP_PROVIDER#g" config.js
+          sed -i "s#__CLOUDBASE_ENV_ID__#$CLOUDBASE_ENV_ID#g" config.js
+          sed -i "s#__CLOUDBASE_REGION__#$CLOUDBASE_REGION#g" config.js
           sed -i "s#__SUPABASE_URL__#$SUPABASE_URL#g" config.js
           sed -i "s#__SUPABASE_ANON_KEY__#$SUPABASE_ANON_KEY#g" config.js
 

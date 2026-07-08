@@ -24,15 +24,15 @@
 
     <main class="app">
       <section id="setupPanel" class="notice hidden">
-        <h2>需要 Supabase 配置</h2>
-        <p>请在 GitHub Secrets 中设置 <code>SUPABASE_URL</code> 和 <code>SUPABASE_ANON_KEY</code>，或复制 <code>config.example.js</code> 为 <code>config.js</code> 后填写项目参数。</p>
+        <h2>需要后端配置</h2>
+        <p>请复制 <code>config.example.js</code> 为 <code>config.js</code>，或在 GitHub Secrets 中设置 CloudBase / Supabase 参数。</p>
       </section>
 
       <section id="authPanel" class="auth-shell hidden">
         <div class="auth-copy">
-          <p class="eyebrow">Supabase Auth</p>
+          <p class="eyebrow">账号登录</p>
           <h2>登录后查询和维护备案数据</h2>
-          <p>账号由 Supabase 管理，数据权限由数据库 RLS 控制。</p>
+          <p>账号和数据权限由当前云端数据库服务管理。</p>
         </div>
         <form id="authForm" class="auth-form">
           <label>

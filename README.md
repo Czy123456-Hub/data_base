@@ -1,10 +1,10 @@
 # 大宗农产品进口报告数据库
 
-这是一个 GitHub Pages + Supabase 的交互式数据库。GitHub Pages 负责网页，Supabase 负责登录、数据库和权限。
+这是一个 GitHub Pages + 云端数据库的交互式数据库。当前默认接入腾讯云 CloudBase，仍保留 Supabase 适配器作为备用。
 
 ## 已实现
 
-- Supabase 邮箱登录/注册
+- CloudBase / Supabase 邮箱登录适配
 - 业务模块工作台，当前接入 `备案产能和自动进口证发放比例`、`港口与船代信息`
 - 其他大模块入口占位，后续可以继续扩展独立数据库模块
 - 企业备案产能、自动进口证额度查询、筛选、汇总
@@ -12,11 +12,34 @@
 - 登录用户新增、修改、删除企业备案记录
 - 操作历史和错误编辑撤回
 - 当前查询结果导出 CSV
-- Supabase RLS 权限控制
+- 云端数据库权限控制
 - 合并后的 31 家原糖加工企业备案产能和自动证 seed 数据
 - 浅蓝色业务系统界面
 
-## 数据库部署
+## CloudBase 部署
+
+当前 CloudBase 环境 ID：
+
+```text
+database200713-d7gpx3anl9853af10
+```
+
+在腾讯云 CloudBase 控制台里先完成：
+
+1. 进入环境 `database200713-d7gpx3anl9853af10`
+2. 开启身份认证里的邮箱/密码登录
+3. 在数据库里创建集合：
+   - `database_modules`
+   - `profiles`
+   - `enterprises`
+   - `port_berths`
+   - `shipping_agents`
+   - `record_audit_logs`
+4. 数据库安全规则先设为登录用户可读写，后续再细化角色权限
+
+页面首次登录后会自动写入 `profiles` 和主模块配置；业务 seed 数据仍需要从现有 Supabase SQL / Excel 转成 CloudBase JSON 后导入。
+
+## Supabase 部署
 
 如果你已经把 Supabase 连接到这个 GitHub 仓库，确认它会执行 `supabase/migrations` 下的 SQL。
 
@@ -32,7 +55,13 @@
 
 ## GitHub Pages 配置
 
-在 GitHub 仓库设置两个 Secrets：
+CloudBase 默认配置已写在部署脚本里。也可以在 GitHub 仓库设置 Secrets 覆盖：
+
+- `APP_PROVIDER` = `cloudbase`
+- `CLOUDBASE_ENV_ID` = `database200713-d7gpx3anl9853af10`
+- `CLOUDBASE_REGION` = `ap-shanghai`
+
+如果要切回 Supabase，再设置：
 
 - `SUPABASE_URL`
 - `SUPABASE_ANON_KEY`
@@ -47,7 +76,7 @@
 cp config.example.js config.js
 ```
 
-填入 Supabase 项目的 URL 和 anon key 后启动本地服务器：
+默认已经填入 CloudBase 环境 ID。如需切换后端，修改 `provider` 后启动本地服务器：
 
 ```bash
 python3 -m http.server 8000
