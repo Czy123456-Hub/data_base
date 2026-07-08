@@ -9,7 +9,7 @@
 ## 控制台步骤
 
 1. 进入腾讯云 CloudBase 控制台，打开环境 `database200713-d7gpx3anl9853af10`
-2. 在身份认证中开启邮箱/密码登录
+2. 在身份认证中开启用户名密码登录
 3. 在数据库中创建这些集合：
    - `database_modules`
    - `profiles`
@@ -31,20 +31,20 @@
 
 ## 注意
 
-CloudBase 不会执行 Supabase 的 SQL migration。当前已把现有 seed 数据转成 `cloudbase/import/` 下的 JSON / JSONL 文件。
+CloudBase 不会执行 Supabase 的 SQL migration。当前已把现有 seed 数据转成 `cloudbase/import/` 下的导入文件。
 
 ## 导入数据
 
 在 CloudBase 控制台进入对应集合，点击“导入数据”，按下面顺序导入：
 
-1. `database_modules`：导入 `cloudbase/import/database_modules.json`
-2. `enterprises`：导入 `cloudbase/import/enterprises.json`
-3. `port_berths`：导入 `cloudbase/import/port_berths.json`
-4. `shipping_agents`：导入 `cloudbase/import/shipping_agents.json`
+1. `database_modules`：导入 `cloudbase/import/database_modules_cloudbase.json`
+2. `enterprises`：导入 `cloudbase/import/enterprises_cloudbase.json`
+3. `port_berths`：导入 `cloudbase/import/port_berths_cloudbase.json`
+4. `shipping_agents`：导入 `cloudbase/import/shipping_agents_cloudbase.json`
 
 `profiles` 和 `record_audit_logs` 先保持空集合，不需要导入。
 
-如果控制台不接受 `.json` 数组文件，就改用同名 `.jsonl` 文件，例如 `cloudbase/import/enterprises.jsonl`。
+这 4 个 `_cloudbase.json` 文件虽然是 `.json` 后缀，但内容是 CloudBase 导入页要求的 JSON Lines 格式，也就是每一行是一条文档。普通同名 `.json` 文件只用于本地查看和备份，不直接用于 CloudBase 导入。
 
 重新生成导入文件：
 

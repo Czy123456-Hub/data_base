@@ -91,11 +91,11 @@ def write_collection(name: str, docs: list[dict[str, Any]]) -> None:
     IMPORT_DIR.mkdir(parents=True, exist_ok=True)
     json_path = IMPORT_DIR / f"{name}.json"
     jsonl_path = IMPORT_DIR / f"{name}.jsonl"
+    cloudbase_path = IMPORT_DIR / f"{name}_cloudbase.json"
     json_path.write_text(json.dumps(docs, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    jsonl_path.write_text(
-        "".join(json.dumps(doc, ensure_ascii=False) + "\n" for doc in docs),
-        encoding="utf-8",
-    )
+    json_lines = "".join(json.dumps(doc, ensure_ascii=False) + "\n" for doc in docs)
+    jsonl_path.write_text(json_lines, encoding="utf-8")
+    cloudbase_path.write_text(json_lines, encoding="utf-8")
     print(f"{name}: {len(docs)} docs")
 
 
